@@ -1,7 +1,6 @@
 using System;
 using Meteor;
 using UnityEngine;
-using Meteor;
 
 public static class Client
 {
