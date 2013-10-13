@@ -23,7 +23,7 @@ namespace Net.DDP.Client
 
 		Type CollectionType { get; }
 
-		IMeteorClient Client { get; }
+		ILiveData Client { get; }
 	}
 
 	public class Collection<TRecordType> : SortedList<string, TRecordType>, ICollection
@@ -44,7 +44,7 @@ namespace Net.DDP.Client
 			}
 		}
 
-		public IMeteorClient Client {
+		public ILiveData Client {
 			get;
 			set;
 		}

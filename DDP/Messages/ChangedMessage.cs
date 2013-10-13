@@ -5,7 +5,7 @@ namespace Net.DDP.Client.Messages
 	{
 		public const string changed = "changed";
 		public string id = null;
-		public IDictionary fields = null;
+		public Hashtable fields = null;
 		public string[] cleared = null;
 		public ChangedMessage ()
 		{

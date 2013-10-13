@@ -44,7 +44,7 @@ namespace Net.DDP.Client
 			public static MethodHost Instance {
 				get {
 					if (((object)_instance) == null) {
-						_instance = (new GameObject ()).AddComponent<MethodHost> ();
+						_instance = (new GameObject ("Method Host")).AddComponent<MethodHost> ();
 					}
 
 					return _instance;

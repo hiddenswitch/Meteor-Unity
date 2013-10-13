@@ -8,8 +8,22 @@ using Extensions;
 
 namespace Net.DDP.Client
 {
-	public class LiveData : IMeteorClient
+	public class LiveData : ILiveData
 	{
+		protected sealed class LiveDataHost : MonoBehaviour {
+			private static LiveDataHost _instance;
+
+			public static LiveDataHost Instance {
+				get {
+					if (((object)_instance) == null) {
+						_instance = (new GameObject ("LiveData Host")).AddComponent<LiveDataHost> ();
+					}
+
+					return _instance;
+				}
+			}
+		}
+
 		public LiveConnection Connector;
 		int uniqueId;
 		Dictionary<string, Net.DDP.Client.ICollection> collections;
@@ -49,9 +63,33 @@ namespace Net.DDP.Client
 			uniqueId = 1;
 		}
 
-		public void Connect(string url)
+		/// <summary>
+		/// Connect to the specified Meteor server.
+		/// </summary>
+		/// <param name="url">URL.</param>
+		public Coroutine Connect(string url)
 		{
+			OnConnected += HandleOnConnected;
+
+			return LiveDataHost.Instance.StartCoroutine (ConnectCoroutine (url));
+		}
+
+		void HandleOnConnected (string obj)
+		{
+			connected = true;
+		}
+
+		bool connected;
+		private IEnumerator ConnectCoroutine(string url) {
 			Connector.Connect(url);
+
+			while (!connected) {
+				yield return null;
+			}
+
+			OnConnected -= HandleOnConnected;
+
+			yield break;
 		}
 
 		/// <summary>

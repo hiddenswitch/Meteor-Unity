@@ -5,146 +5,69 @@ using Net.DDP.Client;
 using Schema;
 using Extensions;
 
-public class Accounts : MonoBehaviour, IAccountManager {
-	public event Action<bool> OnLogin;
-	public bool canLoginFacebook;
-
-	public Collection<object> Users {
+public static class Accounts {
+	public static Collection<Meteor.MongoDocument> Users {
 		get;
 		private set;
 	}
 
-	// Use this for initialization
-	void Start () {
-		// Init Facebook
+	static Accounts() {
 //		FacebookManager.sessionOpenedEvent += HandleFacebookSessionOpened;
 //
 //		FacebookBinding.init ();
 //		FacebookBinding.setSessionLoginBehavior (FacebookSessionLoginBehavior.UseSystemAccountIfPresent);
-		canLoginFacebook = true;
-	}
-
-	// Update is called once per frame
-	void Update () {
-
 	}
 
 	#region Passwords
-	public const string CreateUserMethodName = "createUser";
-	public const string LoginUserMethodName = "login";
-	Method<LoginUserResult> loginMethod;
-
-	void HandleOnLoginUserResponse (Meteor.Error error, LoginUserResult response)
-	{
-		Debug.LogWarning (string.Format ("Accounts.HandleOnLoginUserResponse: {0}",response.Serialize()));
-		Debug.LogError (string.Format ("Accounts.HandleOnLoginUserResponse: {0}", error.Serialize ()));
-		if (OnLogin != null) {
-			OnLogin (true);
-		}
-		loginMethod.OnResponse -= HandleOnLoginUserResponse;
-		loginMethod = null;
-	}
-
+	const string CreateUserMethodName = "createUser";
+	const string LoginUserMethodName = "login";
 	#endregion
 
 	#region SRP
-	public const string BeginPasswordExchangeMethodName = "beginPasswordExchange";
-	Method<PasswordChallenge> beginPasswordExchangeMethod;
-
-	void BeginPasswordExchange(string verifier, string username)
-	{
-
-	}
+	const string BeginPasswordExchangeMethodName = "beginPasswordExchange";
 	#endregion
 
 	#region Facebook
-	
-	void HandleFacebookSessionOpened ()
-	{
-
-	}
 
 	#endregion
 
 	#region IAccountManager implementation
 
-	public void LoginWithFacebook ()
-	{
-		if (canLoginFacebook)
-		{
-//			FacebookBinding.login ();
-		}
-
-		if (OnLogin != null)
-		{
-			OnLogin (false);
-		}
-	}
-
-	public void LoginWithGoogle ()
+	public static Coroutine LoginWithFacebook ()
 	{
 		throw new NotImplementedException ();
 	}
 
-//	[Obsolete("Does not generate correct passwords.")]
-//	public void LoginWith (string username, string password)
-//	{
-//		SubscribeToUsers ();
-//
-//		if (loginMethod != null)
-//		{
-//			Debug.LogWarning ("Accounts.LoginWith: A user login is already in progress.");
-//		}
-//
-//		BeginPasswordExchangeOptions beginPasswordExchangeOptions = new BeginPasswordExchangeOptions () {
-//			A = srp4net.Helpers.Crypto.SRP.StartExchange().A,
-//			user = new LoginUserUser()
-//			{
-//				username = username
-//			}
-//		};
-//
-//		beginPasswordExchangeMethod = Client.Call<PasswordChallenge>(BeginPasswordExchangeMethodName, (Meteor.Error error, PasswordChallenge response) => {
-//			ChallengeResponse challengeResponse = srp4net.Helpers.Crypto.SRP.RespondToChallenge(password,response.identity,response.salt,response.B);
-//			loginMethod = Client.Call<LoginUserResult>(LoginUserMethodName, HandleOnLoginUserResponse, new ChallengeResponseOptions() {
-//				srp = challengeResponse
-//			});
-//		},beginPasswordExchangeOptions);
-//	}
-
-	public void LoginWith(string username, string password)
+	public static Coroutine LoginWithGoogle ()
 	{
-		SubscribeToUsers ();
+		throw new NotImplementedException ();
+	}
 
-		if (loginMethod != null)
-		{
-			Debug.LogWarning ("Accounts.LoginWith: A user login is already in progress.");
-		}
-
-		loginMethod = Client.Call<LoginUserResult> (LoginUserMethodName, HandleOnLoginUserResponse, new InsecureLoginUserOptions () {
+	public static Method<LoginUserResult> LoginWith(string username, string password)
+	{
+		var loginMethod = LiveData.Instance.Call<LoginUserResult> (LoginUserMethodName, new InsecureLoginUserOptions () {
 			password = password,
 			user = new LoginUserUser()
 			{
 				username = username
 			}
 		});
+
+		loginMethod.OnResponse += HandleOnLogin;
+
+		return loginMethod;
 	}
 
-	public void CreateAndLoginWith (string email, string username, string password)
+	static void HandleOnLogin (Meteor.Error error, LoginUserResult response)
 	{
-		SubscribeToUsers();
-
-		if (loginMethod != null)
-		{
-			Debug.LogWarning ("Accounts.CreateAndLoginWith: A user login is already in progress.");
+		if (error == null) {
+			SubscribeToUsers ();
 		}
+	}
 
-		Client.Call<object>(CreateUserMethodName,
-		                    delegate(Meteor.Error error, object response) {
-			Debug.LogWarning (string.Format ("Accounts.HandleOnCreateUserResponse: {0}",response.Serialize()));
-			Debug.LogError (string.Format ("Accounts.HandleOnCreateUserResponse: {0}", error.Serialize ()));
-
-		}, new CreateUserOptions () {
+	public static Coroutine CreateAndLoginWith (string email, string username, string password)
+	{
+		var createUserAndLoginMethod = LiveData.Instance.Call<LoginUserResult>(CreateUserMethodName, new CreateUserOptions () {
 			profile = new Profile()
 			{
 				name = username
@@ -153,18 +76,17 @@ public class Accounts : MonoBehaviour, IAccountManager {
 			srp = srp4net.Helpers.Crypto.SRP.GenerateVerifier(password),
 			username = username
 		});
+
+		createUserAndLoginMethod.OnResponse += HandleOnLogin;
+
+		return createUserAndLoginMethod;
 	}
 
-	void SubscribeToUsers ()
+	static void SubscribeToUsers ()
 	{
 		if (Users == null) {
-			Users = Client.Subscribe<object> ("users", "userData");
+			Users = LiveData.Instance.Subscribe<Meteor.MongoDocument> ("users", "userData");
 		}
-	}
-
-	public LiveData Client {
-		get;
-		set;
 	}
 
 	#endregion
