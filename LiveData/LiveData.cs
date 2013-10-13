@@ -6,13 +6,13 @@ using UnityEngine;
 using Extensions;
 using HTTP;
 
-namespace Meteor.LiveData
+namespace Meteor
 {
 	public class LiveData : ILiveData
 	{
 		WebSocket Connector;
 		int uniqueId;
-		Dictionary<string, ICollection> collections;
+		Dictionary<string, Meteor.ICollection> collections;
 		Dictionary<string, List<string>> subscriptionsToCollections;
 		Dictionary<string, IMethod> methods;
 		string serverId;

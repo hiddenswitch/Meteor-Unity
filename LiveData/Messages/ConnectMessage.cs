@@ -1,6 +1,6 @@
 using Extensions;
 
-namespace Meteor.LiveData
+namespace Meteor
 {
 	public class ConnectMessage : Message
 	{

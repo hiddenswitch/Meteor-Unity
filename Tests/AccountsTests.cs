@@ -1,10 +1,11 @@
 using System;
 using System.Collections;
+using Meteor;
 
 namespace Meteor.Tests
 {
 	[TestFixture]
-	public class AccountsTests
+	public class AccountsTests : ConnectionTestDependency
 	{
 		public AccountsTests ()
 		{
@@ -13,11 +14,11 @@ namespace Meteor.Tests
 
 
 		[Test]
-		public IEnumerator ConnectToMeteor() {
-			yield return Meteor.Connect ("ws://127.0.0.1:3000/websocket");
-
-			Assert.IsTrue (Meteor.IsConnected);
-
+		public IEnumerator CreateAndLoginUser() {
+			yield return Accounts.CreateAndLoginWith (string.Format ("test{0}@gtest.com", UnityEngine.Random.Range (0, 100000000)),
+			                                          string.Format ("test{0}", UnityEngine.Random.Range (0, 100000000)),
+			                                          "testpassword");
+			Assert.IsNotNull (Accounts.UserId);
 			yield break;
 		}
 	}

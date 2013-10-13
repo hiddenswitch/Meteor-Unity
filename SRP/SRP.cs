@@ -99,7 +99,7 @@ namespace srp4net.Helpers
 			/// </summary>
 			/// <returns>The verifier.</returns>
 			/// <param name="password">Password.</param>
-			public static Meteor.Accounts.Verifier GenerateVerifier(string password, string identity = null, string salt = null)
+			public static Meteor.Verifier GenerateVerifier(string password, string identity = null, string salt = null)
 			{
 				if (identity == null)
 				{
@@ -120,7 +120,7 @@ namespace srp4net.Helpers
 				BigInteger xi = new BigInteger (x, 16);
 				BigInteger v = g.modPow (xi, N);
 
-				return new Meteor.Accounts.Verifier () {
+				return new Meteor.Verifier () {
 					identity = identity,
 					salt = salt,
 					verifier = v.ToString(16).ToLowerInvariant().TrimStart('0')
@@ -131,9 +131,9 @@ namespace srp4net.Helpers
 			/// Initiate an SRP exchange.
 			/// </summary>
 			/// <returns>The exchange.</returns>
-			public static Meteor.Accounts.StartExchange StartExchange()
+			public static Meteor.StartExchange StartExchange()
 			{
-				return new Meteor.Accounts.StartExchange () {
+				return new Meteor.StartExchange () {
 					A = Ahex
 				};
 			}
@@ -146,7 +146,7 @@ namespace srp4net.Helpers
 			/// <param name="identity">Identity.</param>
 			/// <param name="salt">Salt.</param>
 			/// <param name="Bhex">Bhex.</param>
-			public static Meteor.Accounts.ChallengeResponse RespondToChallenge(string password, string identity, string salt, string Bhex)
+			public static Meteor.ChallengeResponse RespondToChallenge(string password, string identity, string salt, string Bhex)
 			{
 				BigInteger B = new BigInteger (Bhex, 16);
 				BigInteger u = new BigInteger (Hash (Ahex + Bhex), 16);
@@ -159,7 +159,7 @@ namespace srp4net.Helpers
 				string M = Hash (Ahex + Bhex + Shex);
 				HAMK = Hash (Ahex + M + Shex);
 
-				return new Meteor.Accounts.ChallengeResponse () {
+				return new Meteor.ChallengeResponse () {
 					M = M.ToLowerInvariant().TrimStart('0')
 				};
 			}

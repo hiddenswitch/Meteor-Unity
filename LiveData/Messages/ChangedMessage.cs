@@ -1,5 +1,5 @@
 using System.Collections;
-namespace Meteor.LiveData
+namespace Meteor
 {
 	public class ChangedMessage : CollectionMessage
 	{

@@ -1,6 +1,6 @@
 using System.Collections;
 
-namespace Meteor.LiveData
+namespace Meteor
 {
 	public class ResultMessage : Message
 	{

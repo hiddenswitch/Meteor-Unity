@@ -1,7 +1,7 @@
 using System;
 using Meteor;
 
-namespace Meteor.LiveData
+namespace Meteor
 {
 	public delegate void MethodHandler(Error error, object response);
 	public delegate void MethodHandler<TResponseType>(Error error, TResponseType response);

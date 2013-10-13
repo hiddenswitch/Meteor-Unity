@@ -5,7 +5,7 @@ using System.Reflection;
 using JsonFx.Json;
 using Extensions;
 
-namespace Meteor.LiveData
+namespace Meteor
 {
 	public interface ICollection
 	{

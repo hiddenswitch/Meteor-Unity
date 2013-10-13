@@ -1,4 +1,4 @@
-namespace Meteor.Accounts
+namespace Meteor
 {
 
 	public class ChallengeResponseOptions

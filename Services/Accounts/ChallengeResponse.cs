@@ -1,9 +1,7 @@
-namespace Meteor.Accounts
+namespace Meteor
 {
-
 	public class ChallengeResponse
 	{
 		public string M;
-	}
-	
+	}	
 }

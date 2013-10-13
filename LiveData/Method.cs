@@ -3,7 +3,7 @@ using System.Collections;
 using UnityEngine;
 using Extensions;
 
-namespace Meteor.LiveData
+namespace Meteor
 {
 	public class Method : IMethod
 	{

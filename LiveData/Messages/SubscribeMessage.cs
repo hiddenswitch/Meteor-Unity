@@ -1,4 +1,4 @@
-namespace Meteor.LiveData
+namespace Meteor
 {
 	public class SubscribeMessage : Message
 	{

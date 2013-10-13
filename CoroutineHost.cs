@@ -9,7 +9,7 @@ public class CoroutineHost : MonoSingleton<CoroutineHost>
 	void OnApplicationQuit() {
 		base.OnApplicationQuit ();
 		try {
-			Meteor.LiveData.LiveData.Instance.Close();
+			Meteor.LiveData.Instance.Close();
 		} catch (Exception e) {
 
 		}

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Meteor.LiveData
+namespace Meteor
 {
     public interface IDataSubscriber
     {

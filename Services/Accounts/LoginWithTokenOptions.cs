@@ -1,6 +1,6 @@
 using System;
 
-namespace Meteor.Accounts
+namespace Meteor
 {
 	public class LoginWithTokenOptions
 	{

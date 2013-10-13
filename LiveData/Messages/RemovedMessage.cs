@@ -1,5 +1,5 @@
 using System;
-namespace Meteor.LiveData
+namespace Meteor
 {
 	public class RemovedMessage : CollectionMessage
 	{
