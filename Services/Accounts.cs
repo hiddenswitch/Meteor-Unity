@@ -2,10 +2,11 @@
 using System.Collections;
 using UnityEngine;
 using Net.DDP.Client;
-using Schema;
+using Meteor.Accounts;
 using Extensions;
 
 public static class Accounts {
+	private const string TokenKey = "tokenKey";
 	public static Collection<Meteor.MongoDocument> Users {
 		get;
 		private set;
@@ -43,6 +44,18 @@ public static class Accounts {
 		throw new NotImplementedException ();
 	}
 
+	public static Method<LoginUserResult> LoginWithToken() {
+		var token = PlayerPrefs.GetString (TokenKey, null);
+
+		var loginMethod = LiveData.Instance.Call<LoginUserResult> (LoginUserMethodName, new Meteor.Accounts.LoginWithTokenOptions() {
+			resume = token
+		});
+
+		loginMethod.OnResponse += HandleOnLogin;
+
+		return loginMethod;
+	}
+
 	public static Method<LoginUserResult> LoginWith(string username, string password)
 	{
 		var loginMethod = LiveData.Instance.Call<LoginUserResult> (LoginUserMethodName, new InsecureLoginUserOptions () {
@@ -61,6 +74,7 @@ public static class Accounts {
 	static void HandleOnLogin (Meteor.Error error, LoginUserResult response)
 	{
 		if (error == null) {
+			PlayerPrefs.SetString (TokenKey, response.token);
 			SubscribeToUsers ();
 		}
 	}
@@ -85,7 +99,7 @@ public static class Accounts {
 	static void SubscribeToUsers ()
 	{
 		if (Users == null) {
-			Users = LiveData.Instance.Subscribe<Meteor.MongoDocument> ("users", "userData");
+			Users = LiveData.Instance.Subscribe<Meteor.MongoDocument> ("users", "users");
 		}
 	}
 
