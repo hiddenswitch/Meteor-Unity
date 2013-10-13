@@ -17,6 +17,17 @@ namespace Net.DDP.Client
 		Dictionary<string, IMethod> methods;
 		string serverId;
 
+		static LiveData _instance;
+		public static LiveData Instance {
+			get {
+				if (_instance == null) {
+					_instance = new LiveData ();
+				}
+
+				return _instance;
+			}
+		}
+
 		/// <summary>
 		/// A successful connection event. The first argument is the session ID.
 		/// </summary>

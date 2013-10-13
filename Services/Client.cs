@@ -7,7 +7,7 @@ using Net.DDP.Client;
 public class Client : MonoBehaviour, IClient {
 	public string debugHost = "localhost:3000";
 	public string productionHost = "www.redactedonline.com";
-	LiveData _client = new Net.DDP.Client.LiveData ();
+	LiveData _client = LiveData.Instance;
 	public Accounts accounts;
 
 	void Awake()
