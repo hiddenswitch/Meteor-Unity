@@ -10,7 +10,7 @@ namespace Net.DDP.Client
 {
 	public class LiveData : IMeteorClient
 	{
-		LiveConnection connector;
+		public LiveConnection Connector;
 		int uniqueId;
 		Dictionary<string, Net.DDP.Client.ICollection> collections;
 		Dictionary<string, List<string>> subscriptionsToCollections;
@@ -36,7 +36,7 @@ namespace Net.DDP.Client
 
 		public LiveData()
 		{
-			connector = new LiveConnection(this);
+			Connector = new LiveConnection(this);
 			jsonItemsQueue = new Queue<string>();
 			collections = new Dictionary<string, Net.DDP.Client.ICollection>();
 			subscriptionsToCollections = new Dictionary<string, List<string>>();
@@ -51,25 +51,7 @@ namespace Net.DDP.Client
 
 		public void Connect(string url)
 		{
-			connector.Connect(url);
-		}
-
-		/// <summary>
-		/// Calls the given method. Ignores the response. Returns the request ID.
-		/// </summary>
-		/// <param name="methodName">Method name.</param>
-		/// <param name="arguments">Arguments.</param>
-		public string Call(string methodName, params object[] arguments)
-		{
-			string requestId = string.Format("{0}-{1}",methodName,this.NextId());
-
-			connector.Send(new MethodMessage() {
-				method = methodName,
-				Params = arguments,
-				id = requestId
-			}.Serialize());
-
-			return requestId;
+			Connector.Connect(url);
 		}
 
 		/// <summary>
@@ -78,26 +60,19 @@ namespace Net.DDP.Client
 		/// <param name="methodName">Method name.</param>
 		/// <param name="handler">Handler.</param>
 		/// <param name="arguments">Arguments.</param>
-		public Method Call(string methodName, MethodHandler handler, params object[] arguments)
+		public Method Call(string methodName, params object[] arguments)
 		{
 			string requestId = string.Format("{0}-{1}",methodName,this.NextId());
 
-			Method method = new Method() {
-				Client = this
+			Method method = new Method () {
+				Message = new MethodMessage () {
+					method = methodName,
+					Params = arguments,
+					id = requestId
+				}
 			};
 
-			if (handler != null)
-			{
-				method.OnUntypedResponse += handler;
-			}
-
 			methods[requestId] = method;
-
-			connector.Send(new MethodMessage() {
-				method = methodName,
-				Params = arguments,
-				id = requestId
-			}.Serialize());
 
 			return method;
 		}
@@ -109,27 +84,19 @@ namespace Net.DDP.Client
 		/// <param name="handler">Handler.</param>
 		/// <param name="arguments">Arguments.</param>
 		/// <typeparam name="ResponseType">The type of the response object.</typeparam>
-		public Method<TResponseType> Call<TResponseType>(string methodName, MethodHandler<TResponseType> handler, params object[] arguments)
+		public Method<TResponseType> Call<TResponseType>(string methodName, params object[] arguments)
 			where TResponseType : new()
 		{
 			string requestId = string.Format("{0}-{1}",methodName,this.NextId());
 
-			Method<TResponseType> method = new Method<TResponseType>() {
-				Client = this
+			Method<TResponseType> method = new Method<TResponseType> () {
+				Message = new MethodMessage () {
+					method = methodName,
+					Params = arguments,
+					id = requestId
+				}
 			};
-
-			if (handler != null)
-			{
-				method.OnResponse += handler;
-			}
-
 			methods[requestId] = method;
-
-			connector.Send(new MethodMessage() {
-				method = methodName,
-				Params = arguments,
-				id = requestId
-			}.Serialize());
 
 			return method;
 		}
@@ -169,7 +136,7 @@ namespace Net.DDP.Client
 				collections[collectionName] = collection;
 			}
 
-			connector.Send(new SubscribeMessage() {
+			Connector.Send(new SubscribeMessage() {
 				name = publishName,
 				Params = arguments,
 				id = requestId
@@ -190,7 +157,7 @@ namespace Net.DDP.Client
 
 		public void Close()
 		{
-			connector.Close();
+			Connector.Close();
 		}
 
 		static ManualResetEvent enqueuedEvent;

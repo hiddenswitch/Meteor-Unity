@@ -7,6 +7,7 @@ namespace Net.DDP.Client
 {
 	public class Method : IMethod
 	{
+		public Messages.MethodMessage Message;
 		public event MethodHandler OnUntypedResponse;
 
 		public virtual void Callback(Meteor.Error error, object response)
@@ -21,11 +22,6 @@ namespace Net.DDP.Client
 			get {
 				return typeof(IDictionary);
 			}
-		}
-
-		public IMeteorClient Client {
-			get;
-			set;
 		}
 
 		#region IMethod implementation
@@ -95,7 +91,7 @@ namespace Net.DDP.Client
 
 		public static implicit operator Coroutine(Method<TResponseType> method) {
 			method.OnResponse += method.completed;
-			return MethodHost.Instance.StartCoroutine (method.waitUntilComplete ());
+			return MethodHost.Instance.StartCoroutine (method.Execute ());
 		}
 
 		private void completed(Meteor.Error error, TResponseType response) {
@@ -104,11 +100,16 @@ namespace Net.DDP.Client
 			complete = true;
 		}
 
-		private IEnumerator waitUntilComplete() {
+		private IEnumerator Execute() {
+			// Send the method message over the wire.
+			LiveData.Instance.Connector.Send (Message.Serialize ());
+
+			// Wait until we get a response.
 			while (!complete) {
 				yield return null;
 			}
 
+			// Clear the completed handler.
 			OnResponse -= completed;
 
 			yield break;

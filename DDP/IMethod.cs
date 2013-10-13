@@ -11,7 +11,6 @@ namespace Net.DDP.Client
 		object UntypedResponse { get; }
 		Meteor.Error Error { get; }
 		Type ResponseType { get; }
-		IMeteorClient Client { get; }
 	}
 }
 
