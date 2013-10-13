@@ -9,7 +9,7 @@ namespace Meteor.LiveData
     public interface ILiveData
     {
 		void QueueMessage(string jsonItem);
-        Coroutine Connect(string url);
+        Coroutine Connect(string url, float timeout);
 		Method Call (string methodName, params object[] arguments);
 		Method<TResponseType> Call<TResponseType> (string methodName, params object[] arguments)
 			where TResponseType : new();

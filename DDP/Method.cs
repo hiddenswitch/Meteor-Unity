@@ -10,7 +10,7 @@ namespace Meteor.LiveData
 		public MethodMessage Message;
 		public event MethodHandler OnUntypedResponse;
 
-		public virtual void Callback(Meteor.Error error, object response)
+		public virtual void Callback(Error error, object response)
 		{
 			if (OnUntypedResponse != null)
 			{
@@ -31,26 +31,14 @@ namespace Meteor.LiveData
 			protected set;
 		}
 
-		public Meteor.Error Error {
+		public Error Error {
 			get;
 			protected set;
 		}
 
 		#endregion
 
-		protected sealed class MethodHost : MonoBehaviour {
-			private static MethodHost _instance;
-
-			public static MethodHost Instance {
-				get {
-					if (((object)_instance) == null) {
-						_instance = (new GameObject ("Method Host")).AddComponent<MethodHost> ();
-					}
-
-					return _instance;
-				}
-			}
-		}
+		protected sealed class MethodHost : MonoSingleton<MethodHost> {}
 	}
 
 	public class Method<TResponseType> : Method
@@ -71,7 +59,7 @@ namespace Meteor.LiveData
 
 		#region IMethod implementation
 
-		public override void Callback(Meteor.Error error, object response)
+		public override void Callback(Error error, object response)
 		{
 			TResponseType r = response.Coerce<TResponseType>();
 
@@ -91,10 +79,10 @@ namespace Meteor.LiveData
 
 		public static implicit operator Coroutine(Method<TResponseType> method) {
 			method.OnResponse += method.completed;
-			return MethodHost.Instance.StartCoroutine (method.Execute ());
+			return CoroutineHost.Instance.StartCoroutine (method.Execute ());
 		}
 
-		private void completed(Meteor.Error error, TResponseType response) {
+		private void completed(Error error, TResponseType response) {
 			Response = response;
 			Error = error;
 			complete = true;

@@ -12,6 +12,11 @@ public static class Accounts {
 		private set;
 	}
 
+	public static string UserId {
+		get;
+		private set;
+	}
+
 	static Accounts() {
 //		FacebookManager.sessionOpenedEvent += HandleFacebookSessionOpened;
 //
@@ -75,6 +80,7 @@ public static class Accounts {
 	{
 		if (error == null) {
 			PlayerPrefs.SetString (TokenKey, response.token);
+			UserId = response.id;
 			SubscribeToUsers ();
 		}
 	}

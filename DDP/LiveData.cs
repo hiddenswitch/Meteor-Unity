@@ -9,23 +9,9 @@ namespace Meteor.LiveData
 {
 	public class LiveData : ILiveData
 	{
-		protected sealed class LiveDataHost : MonoBehaviour {
-			private static LiveDataHost _instance;
-
-			public static LiveDataHost Instance {
-				get {
-					if (((object)_instance) == null) {
-						_instance = (new GameObject ("LiveData Host")).AddComponent<LiveDataHost> ();
-					}
-
-					return _instance;
-				}
-			}
-		}
-
 		public LiveConnection Connector;
 		int uniqueId;
-		Dictionary<string, Meteor.LiveData.ICollection> collections;
+		Dictionary<string, ICollection> collections;
 		Dictionary<string, List<string>> subscriptionsToCollections;
 		Dictionary<string, IMethod> methods;
 		string serverId;
@@ -51,7 +37,7 @@ namespace Meteor.LiveData
 		{
 			Connector = new LiveConnection(this);
 			jsonItemsQueue = new Queue<string>();
-			collections = new Dictionary<string, Meteor.LiveData.ICollection>();
+			collections = new Dictionary<string, ICollection>();
 			subscriptionsToCollections = new Dictionary<string, List<string>>();
 			methods = new Dictionary<string, IMethod>();
 
@@ -66,23 +52,38 @@ namespace Meteor.LiveData
 		/// Connect to the specified Meteor server.
 		/// </summary>
 		/// <param name="url">URL.</param>
-		public Coroutine Connect(string url)
+		public Coroutine Connect(string url, float timeout = 2f)
 		{
 			OnConnected += HandleOnConnected;
+			TimedOut = false;
+			Connector.Connect(url);
 
-			return LiveDataHost.Instance.StartCoroutine (ConnectCoroutine (url));
+			CoroutineHost.Instance.StartCoroutine (TimeoutCoroutine (timeout));
+			return CoroutineHost.Instance.StartCoroutine (ConnectCoroutine (url));
 		}
 
 		void HandleOnConnected (string obj)
 		{
-			connected = true;
+			Connected = true;
+			TimedOut = false;
 		}
 
-		bool connected;
-		private IEnumerator ConnectCoroutine(string url) {
-			Connector.Connect(url);
+		public bool Connected;
 
-			while (!connected) {
+		public bool TimedOut;
+
+		private IEnumerator TimeoutCoroutine(float timeout) {
+			yield return new WaitForSeconds (timeout);
+			if (!Connected) {
+				TimedOut = true;
+			}
+		}
+
+		private IEnumerator ConnectCoroutine(string url) {
+			while (!Connected) {
+				if (TimedOut) {
+					yield break;
+				}
 				yield return null;
 			}
 
@@ -237,10 +238,9 @@ namespace Meteor.LiveData
 		private void ProcessQueue()
 		{
 			while (Dequeue()) {
-				Debug.Log(currentJsonItem);
 				IDictionary message = currentJsonItem.Deserialize() as IDictionary;
 				if (message == null) {
-					return;
+					continue;
 				}
 
 				Message m = message.Coerce<Message>();
@@ -289,14 +289,14 @@ namespace Meteor.LiveData
 					if (methods.ContainsKey(resultm.id)) {
 						methods[resultm.id].Callback(resultm.error, resultm.methodResult);
 					} else {
-						Debug.LogError ("DDPClient.ProcessQueue: Result ID not found.");
+//						Debug.LogError ("DDPClient.ProcessQueue: Result ID not found.");
 					}
 					break;
 				case "updated":
 					break;
 				default:
 					if (!message.Contains("server_id")) {
-						Debug.Log(string.Format("DDPClient.ProcessQueue: Unhandled message.\nMessage:\n{0}",message.Serialize()));
+//						Debug.Log(string.Format("DDPClient.ProcessQueue: Unhandled message.\nMessage:\n{0}",message.Serialize()));
 					}
 					break;
 				}

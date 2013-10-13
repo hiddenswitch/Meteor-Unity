@@ -416,7 +416,6 @@ namespace WebSocket4Net
         {
             if (!EnsureWebSocketOpen())
                 return;
-
             ProtocolProcessor.SendMessage(this, message);
         }
 

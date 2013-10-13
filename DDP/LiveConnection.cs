@@ -23,6 +23,7 @@ namespace Meteor.LiveData
             _socket.MessageReceived += new EventHandler<MessageReceivedEventArgs>(socket_MessageReceived);
             _socket.Opened += new EventHandler(_socket_Opened);
             _socket.Open();
+
             _isWait = 1;
             this.Wait();
         }
@@ -37,7 +38,6 @@ namespace Meteor.LiveData
 
         public void Send(string message)
         {
-			Debug.Log (message);
             _socket.Send(message);
         }
 
@@ -49,6 +49,7 @@ namespace Meteor.LiveData
 
         void socket_MessageReceived(object sender, MessageReceivedEventArgs e)
         {
+			System.Console.WriteLine ("test");
             this._client.QueueMessage(e.Message);
         }
 

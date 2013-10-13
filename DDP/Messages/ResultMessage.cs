@@ -6,7 +6,7 @@ namespace Meteor.LiveData
 	{
 		[JsonFx.Json.JsonIgnore]
 		public const string result = "result";
-		public Meteor.Error error;
+		public Error error;
 
 		public string id;
 
