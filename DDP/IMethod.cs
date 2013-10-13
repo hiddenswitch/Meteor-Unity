@@ -1,6 +1,6 @@
 using System;
 
-namespace Net.DDP.Client
+namespace Meteor.LiveData
 {
 	public delegate void MethodHandler(Meteor.Error error, object response);
 	public delegate void MethodHandler<TResponseType>(Meteor.Error error, TResponseType response);

@@ -1,6 +1,6 @@
 using System;
 
-namespace Net.DDP.Client.Messages
+namespace Meteor.LiveData
 {
 	public class AddedBeforeMessage<RecordType> : CollectionMessage
 		where RecordType : new()

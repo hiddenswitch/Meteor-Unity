@@ -3,11 +3,11 @@ using System.Collections;
 using UnityEngine;
 using Extensions;
 
-namespace Net.DDP.Client
+namespace Meteor.LiveData
 {
 	public class Method : IMethod
 	{
-		public Messages.MethodMessage Message;
+		public MethodMessage Message;
 		public event MethodHandler OnUntypedResponse;
 
 		public virtual void Callback(Meteor.Error error, object response)

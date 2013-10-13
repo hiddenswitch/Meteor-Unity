@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-namespace Net.DDP.Client
+namespace Meteor.LiveData
 {
     public interface ILiveData
     {

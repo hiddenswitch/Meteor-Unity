@@ -1,6 +1,6 @@
 using Extensions;
 
-namespace Net.DDP.Client.Messages
+namespace Meteor.LiveData
 {
 	public class ConnectMessage : Message
 	{

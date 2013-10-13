@@ -3,10 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
-using Net.DDP.Client.Messages;
 using Extensions;
 
-namespace Net.DDP.Client
+namespace Meteor.LiveData
 {
 	public class LiveData : ILiveData
 	{
@@ -26,7 +25,7 @@ namespace Net.DDP.Client
 
 		public LiveConnection Connector;
 		int uniqueId;
-		Dictionary<string, Net.DDP.Client.ICollection> collections;
+		Dictionary<string, Meteor.LiveData.ICollection> collections;
 		Dictionary<string, List<string>> subscriptionsToCollections;
 		Dictionary<string, IMethod> methods;
 		string serverId;
@@ -52,7 +51,7 @@ namespace Net.DDP.Client
 		{
 			Connector = new LiveConnection(this);
 			jsonItemsQueue = new Queue<string>();
-			collections = new Dictionary<string, Net.DDP.Client.ICollection>();
+			collections = new Dictionary<string, Meteor.LiveData.ICollection>();
 			subscriptionsToCollections = new Dictionary<string, List<string>>();
 			methods = new Dictionary<string, IMethod>();
 

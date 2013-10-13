@@ -1,9 +1,8 @@
 ﻿using System;
 using WebSocket4Net;
-using Net.DDP.Client.Messages;
 using UnityEngine;
 
-namespace Net.DDP.Client
+namespace Meteor.LiveData
 {
     public class LiveConnection
     {
