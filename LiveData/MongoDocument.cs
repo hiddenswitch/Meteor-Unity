@@ -1,16 +1,13 @@
 using System;
-using System.Collections;
+using System.Collections.Generic;
 namespace Meteor
 {
-	public class MongoDocument : Hashtable
+	public class MongoDocument : Dictionary<string, object>, IMongoDocument
 	{
 		[JsonFx.Json.JsonIgnore]
-		public string Id {
+		public string _id {
 			get {
 				return this ["_id"] as string;
-			}
-			set {
-				this ["_id"] = value;
 			}
 		}
 

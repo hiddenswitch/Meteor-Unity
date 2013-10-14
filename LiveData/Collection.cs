@@ -1,9 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Reflection;
 using JsonFx.Json;
 using Extensions;
+
 
 namespace Meteor
 {
@@ -22,13 +24,16 @@ namespace Meteor
 		void Removed(string id);
 
 		Type CollectionType { get; }
-
-		ILiveData Client { get; }
 	}
 
-	public class Collection<TRecordType> : SortedList<string, TRecordType>, ICollection
-		where TRecordType : new()
+	public class Collection<TRecordType> : KeyedCollection<string, TRecordType>, ICollection
+		where TRecordType : IMongoDocument, new()
 	{
+		protected override string GetKeyForItem (TRecordType item)
+		{
+			return item._id;
+		}
+
 		public string name;
 
 		public bool ready {
@@ -44,11 +49,6 @@ namespace Meteor
 			}
 		}
 
-		public ILiveData Client {
-			get;
-			set;
-		}
-
 		TypeCoercionUtility typeCoercionUtility = new TypeCoercionUtility();
 
 		public event Action<string,TRecordType> OnAdded;
@@ -59,14 +59,18 @@ namespace Meteor
 		#region ICollection implementation
 		void ICollection.AddedBefore(string id, string before, object record)
 		{
-			// TODO: Implement AddedBefore
-			(this as ICollection).Added(id, record);
+			TRecordType r = record.Coerce<TRecordType> ();
+			Insert (IndexOf (this [id]), r);
+
+			if (OnAdded != null) {
+				OnAdded (id, r);
+			}
 		}
 
 		void ICollection.Added(string id, object record)
 		{
-			TRecordType r = record.Coerce<TRecordType>();
-			Add(id, r);
+			TRecordType r = record.Coerce<TRecordType> ();
+			Add (r);
 
 			if (OnAdded != null) {
 				OnAdded(id, r);
@@ -92,7 +96,7 @@ namespace Meteor
 			}
 
 			// Update the fields in r with the content of fields
-			this[id] = (TRecordType)typeCoercionUtility.CoerceType(typeof(TRecordType), fields, record, out memberMap);
+			typeCoercionUtility.CoerceType(typeof(TRecordType), fields, record, out memberMap);
 
 			if (OnChanged != null) {
 				OnChanged(id, this[id]);
@@ -101,8 +105,9 @@ namespace Meteor
 
 		void ICollection.MovedBefore(string id, string before)
 		{
-			// TODO: Implement MovedBefore.
-			return;
+			var record = this [id];
+			Remove (id);
+			Insert (IndexOf (this [before]), record);
 		}
 
 		void ICollection.SubscriptionReady(string subscription)

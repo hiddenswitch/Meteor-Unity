@@ -14,9 +14,9 @@ namespace Meteor.Tests
 		{
 		}
 
-		bool meteorStarted;
+//		bool meteorStarted;
 
-		[Test]
+		[TestSetup]
 		public IEnumerator ConnectToLocalhost() {
 //			// Start meteor if it isn't running
 //			meteorStarted = Process.GetProcesses ().Count (p => {

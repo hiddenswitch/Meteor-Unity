@@ -153,7 +153,7 @@ namespace Meteor
 		/// <param name="arguments">Arguments to the publish function.</param>
 		/// <typeparam name="RecordType">The type of the record in the collection.</typeparam>
 		public Collection<TRecordType> Subscribe<TRecordType>(string collectionName, string publishName, params object[] arguments)
-			where TRecordType : new()
+			where TRecordType : IMongoDocument, new()
 		{
 			string requestId = string.Format("{0}-{1}",publishName,this.NextId());
 
@@ -173,7 +173,6 @@ namespace Meteor
 			} else {
 				collection = new Collection<TRecordType>() {
 					name = collectionName,
-					Client = this
 				};
 				collections[collectionName] = collection;
 			}
