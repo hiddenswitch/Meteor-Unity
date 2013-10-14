@@ -13,7 +13,7 @@ namespace Meteor
 	{
 		void AddedBefore(string id, string before, object record);
 
-		void Added(string id, object record);
+		void Added(string addedMessage);
 
 		void Changed(string id, string[] cleared, IDictionary fields);
 
@@ -27,7 +27,7 @@ namespace Meteor
 	}
 
 	public class Collection<TRecordType> : KeyedCollection<string, TRecordType>, ICollection
-		where TRecordType : IMongoDocument, new()
+		where TRecordType : MongoDocument, new()
 	{
 		protected override string GetKeyForItem (TRecordType item)
 		{
@@ -67,13 +67,15 @@ namespace Meteor
 			}
 		}
 
-		void ICollection.Added(string id, object record)
+		void ICollection.Added(string messageText)
 		{
-			TRecordType r = record.Coerce<TRecordType> ();
+			var message = messageText.Deserialize<AddedMessage<TRecordType>> ();
+			var r = message.fields;
+			r._id = message.id;
 			Add (r);
 
 			if (OnAdded != null) {
-				OnAdded(id, r);
+				OnAdded(r._id, r);
 			}
 		}
 
@@ -91,9 +93,12 @@ namespace Meteor
 			}
 
 			// Add the cleared fields as nulls or defaults
-			foreach (string clear in cleared) {
-				fields[clear] = null;
+			if (cleared != null) {
+				foreach (string clear in cleared) {
+					fields[clear] = null;
+				}
 			}
+
 
 			// Update the fields in r with the content of fields
 			typeCoercionUtility.CoerceType(typeof(TRecordType), fields, record, out memberMap);

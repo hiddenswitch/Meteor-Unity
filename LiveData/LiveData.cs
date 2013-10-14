@@ -153,7 +153,7 @@ namespace Meteor
 		/// <param name="arguments">Arguments to the publish function.</param>
 		/// <typeparam name="RecordType">The type of the record in the collection.</typeparam>
 		public Collection<TRecordType> Subscribe<TRecordType>(string collectionName, string publishName, params object[] arguments)
-			where TRecordType : IMongoDocument, new()
+			where TRecordType : MongoDocument, new()
 		{
 			string requestId = string.Format("{0}-{1}",publishName,this.NextId());
 
@@ -203,54 +203,54 @@ namespace Meteor
 
 		void HandleOnTextMessageRecv (string socketMessage)
 		{
-			IDictionary message = socketMessage.Deserialize() as IDictionary;
-			if (message == null) {
+			IDictionary m = socketMessage.Deserialize() as IDictionary;
+			if (m == null) {
 				return;
 			}
 
-			Message m = message.Coerce<Message>();
+			var msg = m ["msg"] as string;
 
-			switch (m.msg)
+			switch (msg)
 			{
 			case AddedMessage.added:
-				AddedMessage am = message.Coerce<AddedMessage>();
-				if (collections.ContainsKey(am.collection))
+				var collection = m ["collection"] as string;
+				if (collections.ContainsKey(collection))
 				{
-					collections[am.collection].Added(am.id, am.fields);
+					collections[collection].Added(socketMessage);
 				}
 				break;
 			case ChangedMessage.changed:
-				ChangedMessage cm = message.Coerce<ChangedMessage>();
+				ChangedMessage cm = socketMessage.Deserialize<ChangedMessage>();
 				if (collections.ContainsKey(cm.collection))
 				{
 					collections[cm.collection].Changed(cm.id, cm.cleared, cm.fields);
 				}
 				break;
 			case RemovedMessage.removed:
-				RemovedMessage rm = message.Coerce<RemovedMessage>();
+				RemovedMessage rm = socketMessage.Deserialize<RemovedMessage>();
 				if (collections.ContainsKey(rm.collection))
 				{
 					collections[rm.collection].Removed(rm.id);
 				}
 				break;
 			case ReadyMessage.ready:
-				ReadyMessage readym = message.Coerce<ReadyMessage>();
+				ReadyMessage readym = socketMessage.Deserialize<ReadyMessage>();
 				foreach (string sub in readym.subs) {
-					foreach (string collection in subscriptionsToCollections[sub])
+					foreach (string collectionName in subscriptionsToCollections[sub])
 					{
-						collections[collection].SubscriptionReady(sub);
+						collections[collectionName].SubscriptionReady(sub);
 					}
 				}
 				break;
 			case ConnectedMessage.connected:
-				ConnectedMessage connm = message.Coerce<ConnectedMessage>();
+				ConnectedMessage connm = socketMessage.Deserialize<ConnectedMessage>();
 				if (OnConnected != null)
 				{
 					OnConnected(connm.session);
 				}
 				break;
 			case ResultMessage.result:
-				ResultMessage resultm = message.Coerce<ResultMessage>();
+				ResultMessage resultm = socketMessage.Deserialize<ResultMessage>();
 				if (methods.ContainsKey(resultm.id)) {
 					methods[resultm.id].Callback(resultm.error, resultm.methodResult);
 				} else {
@@ -260,8 +260,8 @@ namespace Meteor
 			case "updated":
 				break;
 			default:
-				if (!message.Contains("server_id")) {
-					Debug.Log(string.Format("DDPClient.ProcessQueue: Unhandled message.\nMessage:\n{0}",message.Serialize()));
+				if (!socketMessage.Contains("server_id")) {
+					Debug.Log(string.Format("DDPClient.ProcessQueue: Unhandled message.\nMessage:\n{0}",socketMessage));
 				}
 				break;
 			}

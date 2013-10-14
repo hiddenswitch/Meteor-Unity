@@ -105,7 +105,7 @@ namespace Meteor {
 		static void SubscribeToUsers ()
 		{
 			if (Users == null) {
-				Users = LiveData.Instance.Subscribe<Meteor.MongoDocument> ("users", "users");
+				Users = LiveData.Instance.Subscribe<MongoDocument> ("users", "users");
 			}
 		}
 

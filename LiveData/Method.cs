@@ -38,6 +38,34 @@ namespace Meteor
 
 		#endregion
 
+		protected bool complete;
+
+		protected void completed(Error error, object response) {
+			UntypedResponse = response;
+			Error = error;
+			complete = true;
+		}
+
+		protected virtual IEnumerator Execute() {
+			// Send the method message over the wire.
+			LiveData.Instance.Send (Message);
+
+			// Wait until we get a response.
+			while (!complete) {
+				yield return null;
+			}
+
+			// Clear the completed handler.
+			OnUntypedResponse -= completed;
+
+			yield break;
+		}
+
+		public static implicit operator Coroutine(Method method) {
+			method.OnUntypedResponse += method.completed;
+			return CoroutineHost.Instance.StartCoroutine (method.Execute ());
+		}
+
 		protected sealed class MethodHost : MonoSingleton<MethodHost> {}
 	}
 
@@ -46,7 +74,6 @@ namespace Meteor
 	{
 		public event MethodHandler<TResponseType> OnResponse;
 
-		private bool complete;
 		public TResponseType Response
 		{
 			get {
@@ -77,18 +104,13 @@ namespace Meteor
 			}
 		}
 
-		public static implicit operator Coroutine(Method<TResponseType> method) {
-			method.OnResponse += method.completed;
-			return CoroutineHost.Instance.StartCoroutine (method.Execute ());
-		}
-
-		private void completed(Error error, TResponseType response) {
+		protected void typedCompleted(Error error, TResponseType response) {
 			Response = response;
 			Error = error;
 			complete = true;
 		}
 
-		private IEnumerator Execute() {
+		protected override IEnumerator Execute() {
 			// Send the method message over the wire.
 			LiveData.Instance.Send (Message);
 
@@ -98,10 +120,16 @@ namespace Meteor
 			}
 
 			// Clear the completed handler.
-			OnResponse -= completed;
+			OnResponse -= typedCompleted;
 
 			yield break;
 		}
+
+		public static implicit operator Coroutine(Method<TResponseType> method) {
+			method.OnResponse += method.typedCompleted;
+			return CoroutineHost.Instance.StartCoroutine (method.Execute ());
+		}
+
 
 		#endregion
 	}

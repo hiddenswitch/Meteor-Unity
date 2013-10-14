@@ -2,7 +2,7 @@ using System.Collections;
 
 namespace Meteor
 {
-	public class ResultMessage : Message
+	public class ResultMessage<TResponseType> : Message
 	{
 		[JsonFx.Json.JsonIgnore]
 		public const string result = "result";
@@ -11,7 +11,7 @@ namespace Meteor
 		public string id;
 
 		[JsonFx.Json.JsonName("result")]
-		public object methodResult;
+		public TResponseType methodResult;
 
 		public string[] subs = null;
 		public ResultMessage ()

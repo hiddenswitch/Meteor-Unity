@@ -13,7 +13,7 @@ namespace Meteor
 		Method<TResponseType> Call<TResponseType> (string methodName, params object[] arguments)
 			where TResponseType : new();
 		Collection<TRecordType> Subscribe<TRecordType> (string collectionName, string publishName, params object[] arguments)
-			where TRecordType : IMongoDocument, new();
+			where TRecordType : MongoDocument, new();
         int GetCurrentRequestId();
     }
 }
