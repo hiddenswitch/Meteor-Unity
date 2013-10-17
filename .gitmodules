@@ -1,0 +1,3 @@
+[submodule "JsonFx"]
+	path = JsonFx
+	url = git@github.com:hiddenswitch/jsonfx-1.x.git
