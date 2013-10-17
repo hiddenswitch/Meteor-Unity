@@ -6,18 +6,34 @@ using Extensions;
 
 namespace Meteor {
 	public static class Accounts {
-		private const string TokenKey = "tokenKey";
+		const string TokenKey = "Meteor.Accounts.Token";
+		const string GuestUsernameKey = "Meteor.Accounts.GuestUsername";
+		const string GuestEmailKey = "Meteor.Accounts.GuestEmail";
+		const string GuestPasswordKey = "Meteor.Accounts.GuestPassword";
+
+		public static Error Error {get; private set;}
+		public static LoginUserResult Response {get; private set;}
+
 		public static Collection<MongoDocument> Users {
 			get;
 			private set;
 		}
 
 		public static string UserId {
-			get;
-			private set;
+			get {
+				return Response.id;
+			}
 		}
 
 		static Accounts() {
+			Error = new Error () {
+				error = 500,
+				reason = "You have not attempted to login yet!"
+			};
+			// Check that we're connected to the server. If we're not, print an error.
+			if (!LiveData.Instance.Connected) {
+				Debug.LogError ("Meteor.Accounts: You are not connected to a server. Make sure to call LiveData.Instance.Connect().");
+			}
 	//		FacebookManager.sessionOpenedEvent += HandleFacebookSessionOpened;
 	//
 	//		FacebookBinding.init ();
@@ -78,10 +94,43 @@ namespace Meteor {
 
 		static void HandleOnLogin (Error error, LoginUserResult response)
 		{
+			Error = error;
+			Response = response;
 			if (error == null) {
 				PlayerPrefs.SetString (TokenKey, response.token);
-				UserId = response.id;
-				SubscribeToUsers ();
+			}
+		}
+
+		public static Coroutine LoginAsGuest() {
+			return CoroutineHost.Instance.StartCoroutine (LoginAsGuestCoroutine ());
+		}
+
+		static IEnumerator LoginAsGuestCoroutine ()
+		{
+			var tokenLogin = LoginWithToken ();
+			// If we can login with token, go for it.
+			yield return (Coroutine)tokenLogin;
+			if (tokenLogin.Error == null) {
+				yield break;
+			}
+			// Failed to login with token
+
+			// Create a guest account.
+			var guestUsername = PlayerPrefs.GetString (GuestUsernameKey, null);
+			var guestEmail = PlayerPrefs.GetString (GuestEmailKey, null);
+			var guestPassword = PlayerPrefs.GetString (GuestPasswordKey, null);
+			if (string.IsNullOrEmpty (guestUsername)) {
+				var padding = UnityEngine.Random.Range (0, Int32.MaxValue);
+				guestUsername = string.Format ("anonymous{0}@partyga.me", padding);
+				guestEmail = string.Format ("player{0}", padding);
+				guestPassword = UnityEngine.Random.Range (0, Int32.MaxValue).ToString ();
+				PlayerPrefs.SetString (GuestUsernameKey, guestUsername);
+				PlayerPrefs.SetString (GuestEmailKey, guestEmail);
+				PlayerPrefs.SetString (guestPassword, guestPassword);
+				yield return Accounts.CreateAndLoginWith (guestUsername, guestEmail, guestPassword);
+			}
+			else {
+				yield return Accounts.LoginWith (guestUsername, guestPassword);
 			}
 		}
 
@@ -100,13 +149,6 @@ namespace Meteor {
 			createUserAndLoginMethod.OnResponse += HandleOnLogin;
 
 			return createUserAndLoginMethod;
-		}
-
-		static void SubscribeToUsers ()
-		{
-			if (Users == null) {
-				Users = LiveData.Instance.Subscribe<MongoDocument> ("users", "users");
-			}
 		}
 
 		#endregion

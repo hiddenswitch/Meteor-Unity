@@ -62,6 +62,9 @@ namespace Meteor
 		}
 
 		public static implicit operator Coroutine(Method method) {
+			if (method == null) {
+				return null;
+			}
 			method.OnUntypedResponse += method.completed;
 			return CoroutineHost.Instance.StartCoroutine (method.Execute ());
 		}
@@ -126,6 +129,9 @@ namespace Meteor
 		}
 
 		public static implicit operator Coroutine(Method<TResponseType> method) {
+			if (method == null) {
+				return null;
+			}
 			method.OnResponse += method.typedCompleted;
 			return CoroutineHost.Instance.StartCoroutine (method.Execute ());
 		}
