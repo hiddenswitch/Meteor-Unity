@@ -12,8 +12,8 @@ namespace Meteor
 	{
 		WebSocket Connector;
 		int uniqueId;
-		Dictionary<string, Meteor.ICollection> collections;
-		Dictionary<string, List<string>> subscriptionsToCollections;
+		public CollectionCollection Collections { get; private set; }
+		public SubscriptionCollection Subscriptions { get; private set; }
 		Dictionary<string, IMethod> methods;
 		string serverId;
 
@@ -37,8 +37,8 @@ namespace Meteor
 		public LiveData()
 		{
 			Connector = new WebSocket();
-			collections = new Dictionary<string, ICollection>();
-			subscriptionsToCollections = new Dictionary<string, List<string>>();
+			Collections = new CollectionCollection();
+			Subscriptions = new SubscriptionCollection();
 			methods = new Dictionary<string, IMethod>();
 
 			uniqueId = 1;
@@ -148,33 +148,21 @@ namespace Meteor
 		/// <summary>
 		/// Subscribe to the given publishing endpoint.
 		/// </summary>
-		/// <param name="collectionName">The expected collection name.</param>
 		/// <param name="publishName">The name of the publishing endpoint.</param>
 		/// <param name="arguments">Arguments to the publish function.</param>
 		/// <typeparam name="RecordType">The type of the record in the collection.</typeparam>
-		public Collection<TRecordType> Subscribe<TRecordType>(string collectionName, string publishName, params object[] arguments)
-			where TRecordType : MongoDocument, new()
+		public Subscription Subscribe(string publishName, params object[] arguments)
 		{
 			string requestId = string.Format("{0}-{1}",publishName,this.NextId());
 
 			// Setup backing store.
-			if (!subscriptionsToCollections.ContainsKey(requestId))
+			if (Subscriptions.Contains(requestId))
 			{
-				subscriptionsToCollections.Add(requestId, new List<string>());
-			}
-
-			subscriptionsToCollections[requestId].Add(collectionName);
-
-			Collection<TRecordType> collection;
-
-			if (collections.ContainsKey(collectionName))
-			{
-				collection = collections[collectionName] as Collection<TRecordType>;
+				return Subscriptions [requestId];
 			} else {
-				collection = new Collection<TRecordType>() {
-					name = collectionName,
-				};
-				collections[collectionName] = collection;
+				Subscriptions.Add(new Subscription () {
+					name = requestId
+				});
 			}
 
 			Send(new SubscribeMessage() {
@@ -183,7 +171,7 @@ namespace Meteor
 				id = requestId
 			});
 
-			return collection;
+			return Subscriptions [requestId];
 		}
 		#endregion
 		private int NextId()
@@ -203,6 +191,7 @@ namespace Meteor
 
 		void HandleOnTextMessageRecv (string socketMessage)
 		{
+			Debug.Log (socketMessage);
 			IDictionary m = socketMessage.Deserialize() as IDictionary;
 			if (m == null) {
 				return;
@@ -214,31 +203,30 @@ namespace Meteor
 			{
 			case AddedMessage.added:
 				var collection = m ["collection"] as string;
-				if (collections.ContainsKey(collection))
+				if (Collections.Contains(collection))
 				{
-					collections[collection].Added(socketMessage);
+					Collections[collection].Added(socketMessage);
 				}
 				break;
 			case ChangedMessage.changed:
 				ChangedMessage cm = socketMessage.Deserialize<ChangedMessage>();
-				if (collections.ContainsKey(cm.collection))
+				if (Collections.Contains(cm.collection))
 				{
-					collections[cm.collection].Changed(cm.id, cm.cleared, cm.fields);
+					Collections[cm.collection].Changed(cm.id, cm.cleared, cm.fields);
 				}
 				break;
 			case RemovedMessage.removed:
 				RemovedMessage rm = socketMessage.Deserialize<RemovedMessage>();
-				if (collections.ContainsKey(rm.collection))
+				if (Collections.Contains(rm.collection))
 				{
-					collections[rm.collection].Removed(rm.id);
+					Collections[rm.collection].Removed(rm.id);
 				}
 				break;
 			case ReadyMessage.ready:
 				ReadyMessage readym = socketMessage.Deserialize<ReadyMessage>();
 				foreach (string sub in readym.subs) {
-					foreach (string collectionName in subscriptionsToCollections[sub])
-					{
-						collections[collectionName].SubscriptionReady(sub);
+					if (Subscriptions.Contains(sub)) {
+						Subscriptions [sub].ready = true;
 					}
 				}
 				break;

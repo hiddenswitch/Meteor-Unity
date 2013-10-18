@@ -19,9 +19,11 @@ namespace Meteor
 
 		void MovedBefore(string id, string before);
 
-		void SubscriptionReady(string subscription);
-
 		void Removed(string id);
+
+		string Name {
+			get;
+		}
 
 		Type CollectionType { get; }
 	}
@@ -29,6 +31,22 @@ namespace Meteor
 	public class Collection<TRecordType> : KeyedCollection<string, TRecordType>, ICollection
 		where TRecordType : MongoDocument, new()
 	{
+		private Collection() : base() {}
+
+		public static Collection<TRecordType> Create(string name)
+		{
+			if (string.IsNullOrEmpty(name)) {
+				return new Collection<TRecordType>();
+			}
+
+			// Check if we already have this collection defined, otherwise make it
+			if (!LiveData.Instance.Collections.Contains(name)) {
+				LiveData.Instance.Collections.Add(new Collection<TRecordType> () {name = name} as ICollection);
+			}
+
+			return LiveData.Instance.Collections [name] as Collection<TRecordType>;
+		}
+
 		protected override string GetKeyForItem (TRecordType item)
 		{
 			return item._id;
@@ -53,7 +71,6 @@ namespace Meteor
 
 		public event Action<string,TRecordType> OnAdded;
 		public event Action<string,TRecordType> OnChanged;
-		public event Action<string> OnSubscriptionReady;
 		public event Action<string> OnRemoved;
 
 		#region ICollection implementation
@@ -115,21 +132,18 @@ namespace Meteor
 			Insert (IndexOf (this [before]), record);
 		}
 
-		void ICollection.SubscriptionReady(string subscription)
-		{
-			ready = true;
-			if (OnSubscriptionReady != null)
-			{
-				OnSubscriptionReady(subscription);
-			}
-		}
-
 		void ICollection.Removed(string id)
 		{
 			Remove(id);
 			if (OnRemoved != null)
 			{
 				OnRemoved(id);
+			}
+		}
+
+		string ICollection.Name {
+			get {
+				return name;
 			}
 		}
 		#endregion

@@ -33,11 +33,10 @@ namespace Meteor.Tests
 			var startSubscribeAndGetRecordsTest = LiveData.Instance.Call ("startSubscribeAndGetRecordsTest");
 			yield return (Coroutine)startSubscribeAndGetRecordsTest;
 
-			var collection = LiveData.Instance.Subscribe<TestCollection1Type> ("testCollection1", "testCollection1");
+			var collection = Collection<TestCollection1Type>.Create ("testCollection1");
 
-			while (!collection.ready) {
-				yield return null;
-			}
+			yield return  (Coroutine)LiveData.Instance.Subscribe ("testCollection1");
+
 
 			foreach (var item in collection) {
 				Debug.Log (item.Serialize ());
