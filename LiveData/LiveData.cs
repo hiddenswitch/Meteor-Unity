@@ -191,7 +191,9 @@ namespace Meteor
 
 		void HandleOnTextMessageRecv (string socketMessage)
 		{
+#if TESTS
 			Debug.Log (socketMessage);
+#endif
 			IDictionary m = socketMessage.Deserialize() as IDictionary;
 			if (m == null) {
 				return;

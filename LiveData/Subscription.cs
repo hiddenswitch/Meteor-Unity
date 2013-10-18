@@ -33,6 +33,10 @@ namespace Meteor
 			return CoroutineHost.Instance.StartCoroutine (sub.Wait ());
 		}
 
+		public static Subscription Subscribe(string name, params object[] args) {
+			return LiveData.Instance.Subscribe (name, args);
+		}
+
 		public Subscription ()
 		{
 		}
