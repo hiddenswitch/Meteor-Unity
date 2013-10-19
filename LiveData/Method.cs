@@ -73,8 +73,11 @@ namespace Meteor
 	}
 
 	public class Method<TResponseType> : Method
-		where TResponseType : new()
 	{
+		public static Method<TResponseType> Call(string name, params object[] args) {
+			return LiveData.Instance.Call<TResponseType> (name, args);
+		}
+
 		public event MethodHandler<TResponseType> OnResponse;
 
 		public TResponseType Response
@@ -82,7 +85,7 @@ namespace Meteor
 			get {
 				return UntypedResponse == null ? default(TResponseType) : (TResponseType)UntypedResponse;
 			}
-			set {
+			private set {
 				UntypedResponse = value;
 			}
 		}

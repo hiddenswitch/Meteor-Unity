@@ -55,9 +55,9 @@ namespace Meteor.Tests
 			if (!LiveData.Instance.Connected) {
 				yield return LiveData.Instance.Connect ("ws://127.0.0.1:3000/websocket");
 			}
-
+//
 			Assert.IsTrue (LiveData.Instance.Connected);
-
+//
 			yield break;
 		}
 	}

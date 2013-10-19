@@ -123,7 +123,6 @@ namespace Meteor
 		/// <param name="arguments">Arguments.</param>
 		/// <typeparam name="ResponseType">The type of the response object.</typeparam>
 		public Method<TResponseType> Call<TResponseType>(string methodName, params object[] arguments)
-			where TResponseType : new()
 		{
 			string requestId = string.Format("{0}-{1}",methodName,this.NextId());
 
@@ -140,7 +139,9 @@ namespace Meteor
 		}
 
 		public void Send(object obj) {
-			Connector.Send (obj.Serialize ());
+			var s = obj.Serialize ();
+			UnityEngine.Debug.Log(s);
+			Connector.Send (s);
 		}
 
 
@@ -191,9 +192,7 @@ namespace Meteor
 
 		void HandleOnTextMessageRecv (string socketMessage)
 		{
-#if TESTS
 			Debug.Log (socketMessage);
-#endif
 			IDictionary m = socketMessage.Deserialize() as IDictionary;
 			if (m == null) {
 				return;

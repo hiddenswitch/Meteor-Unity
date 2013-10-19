@@ -10,8 +10,7 @@ namespace Meteor
     {
         Coroutine Connect(string url);
 		Method Call (string methodName, params object[] arguments);
-		Method<TResponseType> Call<TResponseType> (string methodName, params object[] arguments)
-			where TResponseType : new();
+		Method<TResponseType> Call<TResponseType> (string methodName, params object[] arguments);
 		Subscription Subscribe (string publishName, params object[] arguments);
         int GetCurrentRequestId();
     }

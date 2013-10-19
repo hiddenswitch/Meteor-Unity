@@ -96,8 +96,12 @@ namespace Meteor {
 		{
 			Error = error;
 			Response = response;
+
 			if (error == null) {
 				PlayerPrefs.SetString (TokenKey, response.token);
+			} else {
+				PlayerPrefs.SetString (TokenKey, null);
+				Debug.LogWarning (error.reason);
 			}
 		}
 
@@ -108,7 +112,7 @@ namespace Meteor {
 		static IEnumerator LoginAsGuestCoroutine ()
 		{
 			var tokenLogin = LoginWithToken ();
-			// If we can login with token, go for it.
+//			// If we can login with token, go for it.
 			yield return (Coroutine)tokenLogin;
 			if (tokenLogin.Error == null) {
 				yield break;
@@ -119,19 +123,25 @@ namespace Meteor {
 			var guestUsername = PlayerPrefs.GetString (GuestUsernameKey, null);
 			var guestEmail = PlayerPrefs.GetString (GuestEmailKey, null);
 			var guestPassword = PlayerPrefs.GetString (GuestPasswordKey, null);
-			if (string.IsNullOrEmpty (guestUsername)) {
-				var padding = UnityEngine.Random.Range (0, Int32.MaxValue);
-				guestUsername = string.Format ("anonymous{0}@partyga.me", padding);
-				guestEmail = string.Format ("player{0}", padding);
-				guestPassword = UnityEngine.Random.Range (0, Int32.MaxValue).ToString ();
-				PlayerPrefs.SetString (GuestUsernameKey, guestUsername);
-				PlayerPrefs.SetString (GuestEmailKey, guestEmail);
-				PlayerPrefs.SetString (guestPassword, guestPassword);
-				yield return Accounts.CreateAndLoginWith (guestUsername, guestEmail, guestPassword);
+			Debug.Log (guestUsername);
+			if (!string.IsNullOrEmpty (guestUsername)) {
+				yield return (Coroutine)Accounts.LoginWith (guestUsername, guestPassword);
+				if (Error == null) {
+					yield break;
+				}
 			}
-			else {
-				yield return Accounts.LoginWith (guestUsername, guestPassword);
-			}
+
+
+
+
+			var padding = UnityEngine.Random.Range (0, Int32.MaxValue);
+			guestUsername = string.Format ("anonymous{0}@partyga.me", padding);
+			guestEmail = string.Format ("player{0}", padding);
+			guestPassword = UnityEngine.Random.Range (0, Int32.MaxValue).ToString ();
+			PlayerPrefs.SetString (GuestUsernameKey, guestUsername);
+			PlayerPrefs.SetString (GuestEmailKey, guestEmail);
+			PlayerPrefs.SetString (guestPassword, guestPassword);
+			yield return Accounts.CreateAndLoginWith (guestUsername, guestEmail, guestPassword);
 		}
 
 		public static Coroutine CreateAndLoginWith (string email, string username, string password)
