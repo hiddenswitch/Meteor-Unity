@@ -37,45 +37,6 @@ namespace Meteor.Tests
 			Assert.AreEqual (noSideEffectsCall.Response, "done");
 		}
 
-		public class Clam : MongoDocument {
-			public Clam() {}
-			public string name;
-			public double? clamIdentity;
-		}
-
-		[Test]
-		public IEnumerator GetClams() {
-			var clams = Collection<Clam>.Create("clams");
-
-			clams.OnAdded += (string arg1, Clam arg2) => {
-				Debug.Log(string.Format("The clams. Name: {0}",arg2.name));
-			};
-
-			yield return (Coroutine)Subscription.Subscribe ("theClams");
-
-			Debug.Log ("All clams received");
-
-			var clamsMethod = Method<int>.Call ("joeClams", 10);
-			yield return (Coroutine)clamsMethod;
-			Debug.Log (string.Format ("Number of clams total: {0}", clamsMethod.Response));
-//			Assert.AreEqual (clamsMethod.Response, 10);
-
-			clamsMethod = Method<int>.Call ("joeClams", 10);
-			yield return (Coroutine)clamsMethod;
-			Debug.Log (string.Format ("Number of clams total: {0}", clamsMethod.Response));
-
-			Debug.Log (string.Format ("clams in my database: {0}",clams.Count));
-
-			Debug.Log ("clam identities less than 0.5:");
-			foreach(var clam in clams.Where(c => c.clamIdentity != null && c.clamIdentity.GetValueOrDefault() < 0.5)) {
-				Debug.Log (string.Format ("clam name: {0}, identity: {1}", clam.name, clam.clamIdentity));
-			}
-
-			yield return (Coroutine)Method.Call ("makeClamsThisIdentity", 0.95);
-
-			yield break;
-		}
-
 		[Test]
 		public IEnumerator SubscribeAndGetRecords() {
 			var startSubscribeAndGetRecordsTest = Method.Call ("startSubscribeAndGetRecordsTest");
