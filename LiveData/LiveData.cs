@@ -207,6 +207,8 @@ namespace Meteor
 				if (Collections.Contains(collection))
 				{
 					Collections[collection].Added(socketMessage);
+				} else {
+					Debug.LogWarning(string.Format("LiveData: Unhandled record add.\nMessage:\n{0}",socketMessage));
 				}
 				break;
 			case ChangedMessage.changed:
@@ -214,6 +216,8 @@ namespace Meteor
 				if (Collections.Contains(cm.collection))
 				{
 					Collections[cm.collection].Changed(cm.id, cm.cleared, cm.fields);
+				} else {
+					Debug.LogWarning(string.Format("LiveData: Unhandled record change.\nMessage:\n{0}",socketMessage));
 				}
 				break;
 			case RemovedMessage.removed:
@@ -221,13 +225,17 @@ namespace Meteor
 				if (Collections.Contains(rm.collection))
 				{
 					Collections[rm.collection].Removed(rm.id);
+				} else {
+					Debug.LogWarning(string.Format("LiveData: Unhandled record remove.\nMessage:\n{0}",socketMessage));
 				}
 				break;
 			case ReadyMessage.ready:
 				ReadyMessage readym = socketMessage.Deserialize<ReadyMessage>();
 				foreach (string sub in readym.subs) {
-					if (Subscriptions.Contains(sub)) {
+					if (Subscriptions.Contains (sub)) {
 						Subscriptions [sub].ready = true;
+					} else {
+						Debug.LogError (string.Format("LiveData: A subscription ready message was received, but the subscription could not be found.\nSubscription: {0}",sub));
 					}
 				}
 				break;
@@ -243,14 +251,22 @@ namespace Meteor
 				if (methods.ContainsKey(resultm.id)) {
 					methods[resultm.id].Callback(resultm.error, resultm.methodResult);
 				} else {
-					Debug.LogError ("DDPClient.ProcessQueue: Result ID not found.");
+					Debug.LogError (string.Format("LiveData: A result message was received, but the method could not be found.\nMethod: {0}",resultm.id));
 				}
 				break;
-			case "updated":
+			case UpdatedMessage.updated:
+				UpdatedMessage updatedm = socketMessage.Deserialize<UpdatedMessage>();
+				foreach (var method in updatedm.methods) {
+					if (methods.ContainsKey(method)) {
+						methods [method].Updated = true;
+					} else {
+						Debug.LogError (string.Format ("LiveData: An updated message was received, but the method could not be found.\nMethod: {0}", method));
+					}
+				}
 				break;
 			default:
 				if (!socketMessage.Contains("server_id")) {
-					Debug.Log(string.Format("DDPClient.ProcessQueue: Unhandled message.\nMessage:\n{0}",socketMessage));
+					Debug.LogWarning(string.Format("LiveData: Unhandled message.\nMessage:\n{0}",socketMessage));
 				}
 				break;
 			}

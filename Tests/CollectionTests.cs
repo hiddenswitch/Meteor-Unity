@@ -29,13 +29,21 @@ namespace Meteor.Tests
 		}
 
 		[Test]
+		public IEnumerator NoSideEffects() {
+			var noSideEffectsCall = Method<string>.Call ("noSideEffects");
+			yield return (Coroutine)noSideEffectsCall;
+
+			Assert.AreEqual (noSideEffectsCall.Response, "done");
+		}
+
+		[Test]
 		public IEnumerator SubscribeAndGetRecords() {
-			var startSubscribeAndGetRecordsTest = LiveData.Instance.Call ("startSubscribeAndGetRecordsTest");
+			var startSubscribeAndGetRecordsTest = Method.Call ("startSubscribeAndGetRecordsTest");
 			yield return (Coroutine)startSubscribeAndGetRecordsTest;
 
 			var collection = Collection<TestCollection1Type>.Create ("testCollection1");
 
-			yield return  (Coroutine)LiveData.Instance.Subscribe ("testCollection1");
+			yield return  (Coroutine)Subscription.Subscribe ("testCollection1");
 
 
 			foreach (var item in collection) {
@@ -49,19 +57,18 @@ namespace Meteor.Tests
 				}
 			}
 
-			bool updated = false;
+			collection.OnAdded += (string arg1, TestCollection1Type arg2) => {
+				Assert.IsNotNull(arg2.field2);
+			};
 
 			collection.OnChanged += (arg1, arg2) => {
 				Assert.AreEqual (arg2.field2.field3, 100);
-				updated = true;
 			};
 
-			var method = LiveData.Instance.Call ("updateRecord");
+			var method = Method<string>.Call ("updateRecord");
 			yield return (Coroutine)method;
 
-			while (!updated) {
-				yield return null;
-			}
+			Assert.IsNotNull (method.Response);
 
 			yield break;
 		}

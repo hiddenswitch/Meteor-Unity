@@ -7,8 +7,16 @@ namespace Meteor
 {
 	public class Method : IMethod
 	{
+		public Method() {
+			Updated = false;
+		}
+
 		public MethodMessage Message;
 		public event MethodHandler OnUntypedResponse;
+
+		public static Method Call(string name, params object[] args) {
+			return LiveData.Instance.Call (name, args);
+		}
 
 		public virtual void Callback(Error error, object response)
 		{
@@ -36,6 +44,11 @@ namespace Meteor
 			protected set;
 		}
 
+		public bool Updated {
+			get;
+			set;
+		}
+
 		#endregion
 
 		protected bool complete;
@@ -51,7 +64,7 @@ namespace Meteor
 			LiveData.Instance.Send (Message);
 
 			// Wait until we get a response.
-			while (!complete) {
+			while (!(complete && Updated)) {
 				yield return null;
 			}
 
@@ -74,7 +87,11 @@ namespace Meteor
 
 	public class Method<TResponseType> : Method
 	{
-		public static Method<TResponseType> Call(string name, params object[] args) {
+		public Method() {
+			Updated = false;
+		}
+
+		public static new Method<TResponseType> Call(string name, params object[] args) {
 			return LiveData.Instance.Call<TResponseType> (name, args);
 		}
 
@@ -121,7 +138,7 @@ namespace Meteor
 			LiveData.Instance.Send (Message);
 
 			// Wait until we get a response.
-			while (!complete) {
+			while (!(complete && Updated)) {
 				yield return null;
 			}
 

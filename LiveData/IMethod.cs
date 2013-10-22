@@ -9,6 +9,7 @@ namespace Meteor
 	public interface IMethod
 	{
 		void Callback(Error error, object response);
+		bool Updated { get; set; }
 		object UntypedResponse { get; }
 		Error Error { get; }
 		Type ResponseType { get; }
