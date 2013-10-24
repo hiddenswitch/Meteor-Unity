@@ -131,28 +131,26 @@ namespace Meteor {
 				}
 			}
 
-
-
-
 			var padding = UnityEngine.Random.Range (0, Int32.MaxValue);
 			guestUsername = string.Format ("anonymous{0}@partyga.me", padding);
 			guestEmail = string.Format ("player{0}", padding);
 			guestPassword = UnityEngine.Random.Range (0, Int32.MaxValue).ToString ();
 			PlayerPrefs.SetString (GuestUsernameKey, guestUsername);
 			PlayerPrefs.SetString (GuestEmailKey, guestEmail);
-			PlayerPrefs.SetString (guestPassword, guestPassword);
+			PlayerPrefs.SetString (GuestPasswordKey, guestPassword);
 			yield return Accounts.CreateAndLoginWith (guestUsername, guestEmail, guestPassword);
 		}
 
+
 		public static Coroutine CreateAndLoginWith (string email, string username, string password)
 		{
-			var createUserAndLoginMethod = LiveData.Instance.Call<LoginUserResult>(CreateUserMethodName, new CreateUserOptions () {
+			var createUserAndLoginMethod = LiveData.Instance.Call<LoginUserResult>(CreateUserMethodName, new  CreateUserOptions() {
 				profile = new Profile()
 				{
 					name = username
 				},
 				email = email,
-				srp = srp4net.Helpers.Crypto.SRP.GenerateVerifier(password),
+				password = password,
 				username = username
 			});
 

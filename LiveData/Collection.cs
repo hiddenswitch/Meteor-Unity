@@ -69,6 +69,9 @@ namespace Meteor
 
 		TypeCoercionUtility typeCoercionUtility = new TypeCoercionUtility();
 
+		/// <summary>
+		/// Raised every document added. The first paramter is the Id and the second is the document.
+		/// </summary>
 		public event Action<string,TRecordType> OnAdded;
 		public event Action<string,TRecordType> OnChanged;
 		public event Action<string> OnRemoved;
