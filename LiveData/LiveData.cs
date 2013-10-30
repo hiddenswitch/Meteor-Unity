@@ -29,6 +29,15 @@ namespace Meteor
 		}
 
 		/// <summary>
+		/// Enable packet logging.
+		/// </summary>
+		/// <value><c>true</c> if logging is enabled; otherwise, <c>false</c>.</value>
+		public bool Logging {
+			get;
+			set;
+		}
+
+		/// <summary>
 		/// A successful connection event. The first argument is the session ID.
 		/// </summary>
 		public event Action<string> OnConnected;
@@ -140,7 +149,11 @@ namespace Meteor
 
 		public void Send(object obj) {
 			var s = obj.Serialize ();
-			UnityEngine.Debug.Log(s);
+
+			if (Logging) {
+				Debug.Log(s);
+			}
+
 			Connector.Send (s);
 		}
 
@@ -192,7 +205,10 @@ namespace Meteor
 
 		void HandleOnTextMessageRecv (string socketMessage)
 		{
-			Debug.Log (socketMessage);
+			if (Logging) {
+				Debug.Log (socketMessage);
+			}
+
 			IDictionary m = socketMessage.Deserialize() as IDictionary;
 			if (m == null) {
 				return;
