@@ -18,7 +18,7 @@ namespace Meteor
 
 		static IEnumerator ReconnectCoroutine() {
 			// Resubscribe to all subscriptions
-
+			yield break;
 		}
 	}
 }
