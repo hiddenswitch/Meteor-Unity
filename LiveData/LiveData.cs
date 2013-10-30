@@ -78,8 +78,8 @@ namespace Meteor
 			OnConnected += HandleOnConnected;
 			CoroutineHost.Instance.StartCoroutine (TimeoutCoroutine (5.0f));
 			CoroutineHost.Instance.StartCoroutine(Connector.Dispatcher());
-			Connector.Connect(url);
 			Connector.OnTextMessageRecv += HandleOnTextMessageRecv;
+			Connector.Connect(url);
 			Connector.Send (ConnectMessage.connectMessage);
 
 			while (!Connected) {
