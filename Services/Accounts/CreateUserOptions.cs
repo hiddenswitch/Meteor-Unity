@@ -6,7 +6,7 @@ namespace Meteor
 		public Profile profile;
 		public string username;
 		public string email;
-		public Verifier srp;
+		public string password;
 	}
 	
 }
