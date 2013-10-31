@@ -31,7 +31,7 @@ namespace Meteor
 	public class Collection<TRecordType> : KeyedCollection<string, TRecordType>, ICollection
 		where TRecordType : MongoDocument, new()
 	{
-		private Collection() : base() {}
+		protected Collection() : base() {}
 
 		public static Collection<TRecordType> Create(string name)
 		{
