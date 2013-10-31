@@ -16,6 +16,15 @@ namespace Meteor
 			return LiveData.Instance.Connect (url);
 		}
 
+		public static bool Logging {
+			get {
+				return LiveData.Instance.Logging;
+			}
+			set {
+				LiveData.Instance.Logging = value;
+			}
+		}
+
 		static IEnumerator ReconnectCoroutine() {
 			// Resubscribe to all subscriptions
 			yield break;
