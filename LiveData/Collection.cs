@@ -11,9 +11,25 @@ namespace Meteor
 {
 	public interface ICollection
 	{
+		/// <summary>
+		/// Add a record before another record in order.
+		/// </summary>
+		/// <param name="id">Record ID.</param>
+		/// <param name="before">The ID of the record to insert before.</param>
+		/// <param name="record">The record.</param>
 		void AddedBefore(string id, string before, object record);
 
+		/// <summary>
+		/// Add the serialized message to the collection.
+		/// </summary>
+		/// <param name="addedMessage">Added message.</param>
 		void Added(string addedMessage);
+
+		/// <summary>
+		/// Add the record to the collection.
+		/// </summary>
+		/// <param name="record">Record.</param>
+		void Added(object record);
 
 		void Changed(string id, string[] cleared, IDictionary fields);
 
@@ -92,6 +108,13 @@ namespace Meteor
 			var message = messageText.Deserialize<AddedMessage<TRecordType>> ();
 			var r = message.fields;
 			r._id = message.id;
+			((ICollection)this).Added (r);
+		}
+
+		void ICollection.Added(object record)
+		{
+			var r = record.Coerce<TRecordType> ();
+
 			Add (r);
 
 			if (OnAdded != null) {
