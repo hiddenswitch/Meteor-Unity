@@ -31,16 +31,39 @@ namespace Meteor
 		/// <param name="record">Record.</param>
 		void Added(object record);
 
+		/// <summary>
+		/// Notify the collection that a record has changed.
+		/// </summary>
+		/// <param name="id">Record ID.</param>
+		/// <param name="cleared">Fields that are now undefined.</param>
+		/// <param name="fields">New values for fields of record.</param>
 		void Changed(string id, string[] cleared, IDictionary fields);
 
+		/// <summary>
+		/// Move a record before another record.
+		/// </summary>
+		/// <param name="id">ID of record.</param>
+		/// <param name="before">ID of record to move before.</param>
 		void MovedBefore(string id, string before);
 
+		/// <summary>
+		/// Remove a record.
+		/// </summary>
+		/// <param name="id">Identifier.</param>
 		void Removed(string id);
 
+		/// <summary>
+		/// Collection name.
+		/// </summary>
+		/// <value>The name.</value>
 		string Name {
 			get;
 		}
 
+		/// <summary>
+		/// Record type.
+		/// </summary>
+		/// <value>The type of the collection.</value>
 		Type CollectionType { get; }
 	}
 
