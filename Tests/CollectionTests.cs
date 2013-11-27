@@ -1,3 +1,4 @@
+#if TESTS
 using System;
 using Meteor;
 using UnityEngine;
@@ -75,4 +76,4 @@ namespace Meteor.Tests
 		}
 	}
 }
-
+#endif
