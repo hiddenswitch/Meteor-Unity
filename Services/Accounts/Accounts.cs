@@ -7,12 +7,29 @@ using Extensions;
 namespace Meteor {
 	public static class Accounts {
 		const string TokenKey = "Meteor.Accounts.Token";
+		const string IdKey = "Meteor.Accounts.Id";
 		const string GuestUsernameKey = "Meteor.Accounts.GuestUsername";
 		const string GuestEmailKey = "Meteor.Accounts.GuestEmail";
 		const string GuestPasswordKey = "Meteor.Accounts.GuestPassword";
 
+		public static string GuestEmailDomain = "example.com";
+		public static string FacebookScope = "email";
+
 		public static Error Error {get; private set;}
-		public static LoginUserResult Response {get; private set;}
+		static LoginUserResult _response;
+		public static LoginUserResult Response
+		{
+			get {
+				return _response;
+			}
+			private set {
+				_response = value;
+				if (_response != null) {
+					PlayerPrefs.SetString (TokenKey, _response.token);
+					PlayerPrefs.SetString (IdKey, _response.id);
+				}
+			}
+		}
 
 		public static Collection<MongoDocument> Users {
 			get;
@@ -21,7 +38,11 @@ namespace Meteor {
 
 		public static string UserId {
 			get {
-				return Response.id;
+				if (Response == null) {
+					return null;
+				} else {
+					return Response.id;
+				}
 			}
 		}
 
@@ -34,10 +55,6 @@ namespace Meteor {
 			if (!LiveData.Instance.Connected) {
 				Debug.LogError ("Meteor.Accounts: You are not connected to a server. Make sure to call LiveData.Instance.Connect().");
 			}
-	//		FacebookManager.sessionOpenedEvent += HandleFacebookSessionOpened;
-	//
-	//		FacebookBinding.init ();
-	//		FacebookBinding.setSessionLoginBehavior (FacebookSessionLoginBehavior.UseSystemAccountIfPresent);
 		}
 
 		#region Passwords
@@ -57,7 +74,55 @@ namespace Meteor {
 
 		public static Coroutine LoginWithFacebook ()
 		{
-			throw new NotImplementedException ();
+			return CoroutineHost.Instance.StartCoroutine (LoginWithFacebookCoroutine ());
+		}
+
+		private static IEnumerator LoginWithFacebookCoroutine() {
+			#if FACEBOOK
+			Error = null;
+			var facebookHasInitialized = false;
+			FB.Init(() => facebookHasInitialized = true);
+
+			while (!facebookHasInitialized) {
+				yield return null;
+			}
+
+
+			FBResult loginResult = null;
+			FB.Login("email", result => loginResult = result);
+
+			while (loginResult == null) {
+				yield return null;
+			}
+
+			if (FB.IsLoggedIn) {
+				var loginMethod = Method<LoginUserResult>.Call ("facebookLoginWithAccessToken", FB.UserId, string.Format("-{0}@facebook.com", FB.UserId), FB.AccessToken);
+				yield return (Coroutine)loginMethod;
+				if (loginMethod.Error == null) {
+					// We're logged in!
+					Response = loginMethod.Response;
+					Error = null;
+				} else {
+					Response = null;
+					Error = loginMethod.Error;
+				}
+			} else {
+				Response = null;
+				Error = new Error() {
+					error = 500,
+					reason = "Could not login to Facebook."
+				};
+			}
+
+			#else
+			UnityEngine.Debug.LogError("Facebook login is not enabled with a build setting, or you're missing the Facebook SDK.");
+			Error = new Error() {
+				error = 500,
+				reason = "Facebook login is not enabled with a build setting, or you're missing the Facebook SDK."
+			};
+			#endif
+
+			yield break;
 		}
 
 		public static Coroutine LoginWithGoogle ()
@@ -65,11 +130,20 @@ namespace Meteor {
 			throw new NotImplementedException ();
 		}
 
+		public static string Token {
+			get {
+				if (Response == null) {
+					return PlayerPrefs.GetString(TokenKey,null);
+				} else {
+					return Response.token;
+				}
+			}
+		}
+
 		public static Method<LoginUserResult> LoginWithToken() {
-			var token = PlayerPrefs.GetString (TokenKey, null);
 
 			var loginMethod = LiveData.Instance.Call<LoginUserResult> (LoginUserMethodName, new Meteor.LoginWithTokenOptions() {
-				resume = token
+				resume = Token
 			});
 
 			loginMethod.OnResponse += HandleOnLogin;
@@ -112,7 +186,7 @@ namespace Meteor {
 		static IEnumerator LoginAsGuestCoroutine ()
 		{
 			var tokenLogin = LoginWithToken ();
-//			// If we can login with token, go for it.
+			// If we can login with token, go for it.
 			yield return (Coroutine)tokenLogin;
 			if (tokenLogin.Error == null) {
 				yield break;
@@ -132,7 +206,7 @@ namespace Meteor {
 			}
 
 			var padding = UnityEngine.Random.Range (0, Int32.MaxValue);
-			guestUsername = string.Format ("anonymous{0}@partyga.me", padding);
+			guestUsername = string.Format ("anonymous{0}@{1}", padding, GuestEmailDomain);
 			guestEmail = string.Format ("player{0}", padding);
 			guestPassword = UnityEngine.Random.Range (0, Int32.MaxValue).ToString ();
 			PlayerPrefs.SetString (GuestUsernameKey, guestUsername);
