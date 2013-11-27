@@ -209,6 +209,9 @@ namespace Meteor {
 			var deviceToken = NotificationServices.deviceToken;
 
 			while (deviceToken == null) {
+				if (!string.IsNullOrEmpty(NotificationServices.registrationError)) {
+					yield break;
+				}
 				deviceToken = NotificationServices.deviceToken;
 				yield return new WaitForEndOfFrame();
 			}
