@@ -1,3 +1,4 @@
+#if TESTS
 using System;
 using System.Collections;
 using System.Diagnostics;
@@ -29,4 +30,4 @@ namespace Meteor.Tests
 		}
 	}
 }
-
+#endif
