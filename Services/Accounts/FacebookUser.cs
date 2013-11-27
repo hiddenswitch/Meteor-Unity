@@ -8,6 +8,7 @@ namespace Meteor
 		{
 		}
 
+		public string email;
 		public string name;
 		public string gender;
 	}

@@ -118,9 +118,9 @@ namespace Meteor {
 					yield break;
 				}
 
-				var name = meResultText.Deserialize<FacebookUser>().name;
+				var fbUser = meResultText.Deserialize<FacebookUser>();
 
-				var loginMethod = Method<LoginUserResult>.Call ("facebookLoginWithAccessToken", FB.UserId, string.Format("-{0}@facebook.com", FB.UserId), name, FB.AccessToken);
+				var loginMethod = Method<LoginUserResult>.Call ("facebookLoginWithAccessToken", FB.UserId, fbUser.email ?? string.Format("-{0}@facebook.com", FB.UserId), fbUser.name, FB.AccessToken);
 				yield return (Coroutine)loginMethod;
 				if (loginMethod.Error == null) {
 					// We're logged in!
