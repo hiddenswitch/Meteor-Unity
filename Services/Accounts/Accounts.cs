@@ -96,7 +96,31 @@ namespace Meteor {
 			}
 
 			if (FB.IsLoggedIn) {
-				var loginMethod = Method<LoginUserResult>.Call ("facebookLoginWithAccessToken", FB.UserId, string.Format("-{0}@facebook.com", FB.UserId), FB.AccessToken);
+				string meResultText = null;
+				string meResultError = null;
+				var meResult = false;
+				FB.API("/me",Facebook.HttpMethod.GET, result => {
+					meResult = true;
+					meResultError = result.Error;
+					meResultText = result.Text;
+				});
+
+				while (!meResult) {
+					yield return null;
+				}
+
+				if (meResultText == null) {
+					Response = null;
+					Error = new Error() {
+						error = 500,
+						reason = meResultError
+					};
+					yield break;
+				}
+
+				var name = meResultText.Deserialize<FacebookUser>().name;
+
+				var loginMethod = Method<LoginUserResult>.Call ("facebookLoginWithAccessToken", FB.UserId, string.Format("-{0}@facebook.com", FB.UserId), name, FB.AccessToken);
 				yield return (Coroutine)loginMethod;
 				if (loginMethod.Error == null) {
 					// We're logged in!
