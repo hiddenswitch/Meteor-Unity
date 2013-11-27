@@ -78,6 +78,14 @@ namespace Meteor {
 		}
 
 		private static IEnumerator LoginWithFacebookCoroutine() {
+			var tokenLogin = LoginWithToken ();
+			// If we can login with token, go for it.
+			yield return (Coroutine)tokenLogin;
+			if (tokenLogin.Error == null) {
+				yield break;
+			}
+			// Failed to login with token
+
 			#if FACEBOOK
 			Error = null;
 			var facebookHasInitialized = false;
@@ -121,15 +129,8 @@ namespace Meteor {
 				var fbUser = meResultText.Deserialize<FacebookUser>();
 
 				var loginMethod = Method<LoginUserResult>.Call ("facebookLoginWithAccessToken", FB.UserId, fbUser.email ?? string.Format("-{0}@facebook.com", FB.UserId), fbUser.name, FB.AccessToken);
+				loginMethod.OnResponse += HandleOnLogin;
 				yield return (Coroutine)loginMethod;
-				if (loginMethod.Error == null) {
-					// We're logged in!
-					Response = loginMethod.Response;
-					Error = null;
-				} else {
-					Response = null;
-					Error = loginMethod.Error;
-				}
 			} else {
 				Response = null;
 				Error = new Error() {
@@ -196,11 +197,34 @@ namespace Meteor {
 			Response = response;
 
 			if (error == null) {
-				PlayerPrefs.SetString (TokenKey, response.token);
+				CoroutineHost.Instance.StartCoroutine (RegisterForPush ());
 			} else {
-				PlayerPrefs.SetString (TokenKey, null);
 				Debug.LogWarning (error.reason);
 			}
+		}
+
+		private static IEnumerator RegisterForPush() {
+			#if PUSH
+			NotificationServices.RegisterForRemoteNotificationTypes(RemoteNotificationType.Alert | RemoteNotificationType.Badge | RemoteNotificationType.Sound);
+			var deviceToken = NotificationServices.deviceToken;
+
+			while (deviceToken == null) {
+				deviceToken = NotificationServices.deviceToken;
+				yield return new WaitForEndOfFrame();
+			}
+
+			// Convert device token to hex
+			var deviceTokenHex = new System.Text.StringBuilder(deviceToken.Length*2);
+
+			foreach (byte b in deviceToken) {
+				deviceTokenHex.Append(b.ToString("X2"));
+			}
+
+			Debug.Log(string.Format("deviceToken: {0}, Application.platform: {1}", deviceTokenHex, Application.platform.ToString()));
+
+			var registerForPush = (Coroutine)Method.Call("registerForPush", Application.platform.ToString(), deviceTokenHex.ToString());
+
+			#endif
 		}
 
 		public static Coroutine LoginAsGuest() {

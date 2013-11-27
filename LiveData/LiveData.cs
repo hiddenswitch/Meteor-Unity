@@ -263,7 +263,8 @@ namespace Meteor
 				}
 				break;
 			case ResultMessage.result:
-				ResultMessage resultm = socketMessage.Deserialize<ResultMessage>();
+				ResultMessage resultm = null;
+				resultm = socketMessage.Deserialize<ResultMessage>();
 				if (methods.ContainsKey(resultm.id)) {
 					methods[resultm.id].Callback(resultm.error, resultm.methodResult);
 				} else {
