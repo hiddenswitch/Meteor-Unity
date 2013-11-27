@@ -103,41 +103,42 @@ namespace Meteor {
 				yield return null;
 			}
 
-			if (FB.IsLoggedIn) {
-				string meResultText = null;
-				string meResultError = null;
-				var meResult = false;
-				FB.API("/me",Facebook.HttpMethod.GET, result => {
-					meResult = true;
-					meResultError = result.Error;
-					meResultText = result.Text;
-				});
-
-				while (!meResult) {
-					yield return null;
-				}
-
-				if (meResultText == null) {
-					Response = null;
-					Error = new Error() {
-						error = 500,
-						reason = meResultError
-					};
-					yield break;
-				}
-
-				var fbUser = meResultText.Deserialize<FacebookUser>();
-
-				var loginMethod = Method<LoginUserResult>.Call ("facebookLoginWithAccessToken", FB.UserId, fbUser.email ?? string.Format("-{0}@facebook.com", FB.UserId), fbUser.name, FB.AccessToken);
-				loginMethod.OnResponse += HandleOnLogin;
-				yield return (Coroutine)loginMethod;
-			} else {
+			if (!FB.IsLoggedIn) {
 				Response = null;
 				Error = new Error() {
 					error = 500,
 					reason = "Could not login to Facebook."
 				};
+				yield break;
 			}
+
+			string meResultText = null;
+			string meResultError = null;
+			var meResult = false;
+			FB.API("/me",Facebook.HttpMethod.GET, result => {
+				meResult = true;
+				meResultError = result.Error;
+				meResultText = result.Text;
+			});
+
+			while (!meResult) {
+				yield return null;
+			}
+
+			if (meResultText == null) {
+				Response = null;
+				Error = new Error() {
+					error = 500,
+					reason = meResultError
+				};
+				yield break;
+			}
+
+			var fbUser = meResultText.Deserialize<FacebookUser>();
+
+			var loginMethod = Method<LoginUserResult>.Call ("facebookLoginWithAccessToken", FB.UserId, fbUser.email ?? string.Format("-{0}@facebook.com", FB.UserId), fbUser.name, FB.AccessToken);
+			loginMethod.OnResponse += HandleOnLogin;
+			yield return (Coroutine)loginMethod;
 
 			#else
 			UnityEngine.Debug.LogError("Facebook login is not enabled with a build setting, or you're missing the Facebook SDK.");
