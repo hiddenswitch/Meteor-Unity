@@ -205,7 +205,7 @@ namespace Meteor {
 		}
 
 		private static IEnumerator RegisterForPush() {
-			#if PUSH
+			#if PUSH && UNITY_IOS
 			NotificationServices.RegisterForRemoteNotificationTypes(RemoteNotificationType.Alert | RemoteNotificationType.Badge | RemoteNotificationType.Sound);
 			var deviceToken = NotificationServices.deviceToken;
 
