@@ -227,7 +227,8 @@ namespace Meteor {
 			Debug.Log(string.Format("deviceToken: {0}, Application.platform: {1}", deviceTokenHex, Application.platform.ToString()));
 
 			var registerForPush = (Coroutine)Method.Call("registerForPush", Application.platform.ToString(), deviceTokenHex.ToString());
-
+			#else
+			yield break;
 			#endif
 		}
 
