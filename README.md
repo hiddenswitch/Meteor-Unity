@@ -5,7 +5,7 @@ A Unity SDK for Meteor.
 
 ##### Getting started
 
- 1. Install `meteor` and `meteorite`
+  1. Install `meteor` and `meteorite`
  
     ```sh
     # Install Brew if it isn't already installed
