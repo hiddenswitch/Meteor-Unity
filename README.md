@@ -57,7 +57,7 @@ A Unity SDK for Meteor.
   
   6. Connect to your server from Unity. All `meteor` work should live in coroutines.
   
-    ```sh
+    ```c#
     IEnumerator MeteorExample() {
       var production = false;
 
