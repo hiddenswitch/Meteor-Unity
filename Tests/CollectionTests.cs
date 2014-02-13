@@ -30,6 +30,7 @@ namespace Meteor.Tests
 		{
 		}
 
+		// These tests are intended to be run against a test meteor server
 		[Test]
 		public IEnumerator NoSideEffects() {
 			var noSideEffectsCall = Method<string>.Call ("noSideEffects");
