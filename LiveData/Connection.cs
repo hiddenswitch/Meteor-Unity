@@ -25,6 +25,12 @@ namespace Meteor
 			}
 		}
 
+		public static bool Connected {
+			get {
+				return LiveData.Instance.Connected;
+			}
+		}
+
 		static IEnumerator ReconnectCoroutine() {
 			// Resubscribe to all subscriptions
 			yield break;

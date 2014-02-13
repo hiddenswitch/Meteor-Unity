@@ -13,7 +13,6 @@ namespace Meteor
 		[JsonFx.Json.JsonName("result")]
 		public TResponseType methodResult;
 
-		public string[] subs = null;
 		public ResultMessage ()
 		{
 			msg = result;
