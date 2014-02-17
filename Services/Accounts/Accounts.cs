@@ -4,21 +4,32 @@ using UnityEngine;
 using Meteor;
 using Extensions;
 
-namespace Meteor {
-	public static class Accounts {
+namespace Meteor
+{
+	public static class Accounts
+	{
+		public static Error Error { get; private set; }
+
+		public static string GuestEmailDomain = "example.com";
+		public static string FacebookScope = "email";
 		const string TokenKey = "Meteor.Accounts.Token";
 		const string IdKey = "Meteor.Accounts.Id";
 		const string GuestUsernameKey = "Meteor.Accounts.GuestUsername";
 		const string GuestEmailKey = "Meteor.Accounts.GuestEmail";
 		const string GuestPasswordKey = "Meteor.Accounts.GuestPassword";
-
-		public static string GuestEmailDomain = "example.com";
-		public static string FacebookScope = "email";
-
-		public static Error Error {get; private set;}
+		const string CreateUserMethodName = "createUser";
+		const string LoginUserMethodName = "login";
+		const string BeginPasswordExchangeMethodName = "beginPasswordExchange";
 		static LoginUserResult _response;
-		public static LoginUserResult Response
-		{
+
+		public static event Action<Error, LoginUserResult> UserDidLogin;
+
+		public static Collection<MongoDocument> Users {
+			get;
+			private set;
+		}
+
+		public static LoginUserResult Response {
 			get {
 				return _response;
 			}
@@ -31,61 +42,39 @@ namespace Meteor {
 			}
 		}
 
-		public static Collection<MongoDocument> Users {
-			get;
-			private set;
-		}
-
 		public static string UserId {
 			get {
-				if (Response == null) {
-					return null;
-				} else {
+				if (Response != null) {
 					return Response.id;
+				}
+
+				string storedId = PlayerPrefs.GetString (IdKey);
+
+				if (storedId != null) {
+					return storedId;
+				}
+
+				return null;
+			}
+		}
+
+		public static string Token {
+			get {
+				if (Response == null) {
+					return PlayerPrefs.GetString (TokenKey, null);
+				} else {
+					return Response.token;
 				}
 			}
 		}
-
-		static Accounts() {
-			Error = new Error () {
-				error = 500,
-				reason = "You have not attempted to login yet!"
-			};
-			// Check that we're connected to the server. If we're not, print an error.
-			if (!LiveData.Instance.Connected) {
-				Debug.LogError ("Meteor.Accounts: You are not connected to a server. Make sure to call LiveData.Instance.Connect().");
-			}
-		}
-
-		#region Passwords
-		const string CreateUserMethodName = "createUser";
-		const string LoginUserMethodName = "login";
-		#endregion
-
-		#region SRP
-		const string BeginPasswordExchangeMethodName = "beginPasswordExchange";
-		#endregion
-
-		#region Facebook
-
-		#endregion
-
-		#region IAccountManager implementation
 
 		public static Coroutine LoginWithFacebook ()
 		{
 			return CoroutineHost.Instance.StartCoroutine (LoginWithFacebookCoroutine ());
 		}
 
-		private static IEnumerator LoginWithFacebookCoroutine() {
-			var tokenLogin = LoginWithToken ();
-			// If we can login with token, go for it.
-			yield return (Coroutine)tokenLogin;
-			if (tokenLogin.Error == null) {
-				yield break;
-			}
-			// Failed to login with token
-
+		private static IEnumerator LoginWithFacebookCoroutine ()
+		{
 			#if FACEBOOK
 			Error = null;
 			var facebookHasInitialized = false;
@@ -141,8 +130,8 @@ namespace Meteor {
 			yield return (Coroutine)loginMethod;
 
 			#else
-			UnityEngine.Debug.LogError("Facebook login is not enabled with a build setting, or you're missing the Facebook SDK.");
-			Error = new Error() {
+			UnityEngine.Debug.LogError ("Facebook login is not enabled with a build setting, or you're missing the Facebook SDK.");
+			Error = new Error () {
 				error = 500,
 				reason = "Facebook login is not enabled with a build setting, or you're missing the Facebook SDK."
 			};
@@ -156,19 +145,9 @@ namespace Meteor {
 			throw new NotImplementedException ();
 		}
 
-		public static string Token {
-			get {
-				if (Response == null) {
-					return PlayerPrefs.GetString(TokenKey,null);
-				} else {
-					return Response.token;
-				}
-			}
-		}
-
-		public static Method<LoginUserResult> LoginWithToken() {
-
-			var loginMethod = LiveData.Instance.Call<LoginUserResult> (LoginUserMethodName, new Meteor.LoginWithTokenOptions() {
+		public static Method<LoginUserResult> LoginWithToken ()
+		{
+			var loginMethod = LiveData.Instance.Call<LoginUserResult> (LoginUserMethodName, new Meteor.LoginWithTokenOptions () {
 				resume = Token
 			});
 
@@ -177,7 +156,7 @@ namespace Meteor {
 			return loginMethod;
 		}
 
-		public static Method<LoginUserResult> LoginWith(string username, string password)
+		public static Method<LoginUserResult> LoginWith (string username, string password)
 		{
 			var loginMethod = LiveData.Instance.Call<LoginUserResult> (LoginUserMethodName, new InsecureLoginUserOptions () {
 				password = password,
@@ -197,6 +176,11 @@ namespace Meteor {
 			Error = error;
 			Response = response;
 
+			if (UserDidLogin != null)
+			{
+				UserDidLogin (error, response);
+			}
+
 			if (error == null) {
 				CoroutineHost.Instance.StartCoroutine (RegisterForPush ());
 			} else {
@@ -204,7 +188,8 @@ namespace Meteor {
 			}
 		}
 
-		private static IEnumerator RegisterForPush() {
+		private static IEnumerator RegisterForPush ()
+		{
 			#if PUSH && UNITY_IOS
 			NotificationServices.RegisterForRemoteNotificationTypes(RemoteNotificationType.Alert | RemoteNotificationType.Badge | RemoteNotificationType.Sound);
 			var deviceToken = NotificationServices.deviceToken;
@@ -232,7 +217,8 @@ namespace Meteor {
 			#endif
 		}
 
-		public static Coroutine LoginAsGuest() {
+		public static Coroutine LoginAsGuest ()
+		{
 			return CoroutineHost.Instance.StartCoroutine (LoginAsGuestCoroutine ());
 		}
 
@@ -268,10 +254,21 @@ namespace Meteor {
 			yield return Accounts.CreateAndLoginWith (guestUsername, guestEmail, guestPassword);
 		}
 
+		public static Coroutine LoginWithDevice ()
+		{
+			return CoroutineHost.Instance.StartCoroutine (LoginWithDeviceCoroutine ());
+		}
+
+		static IEnumerator LoginWithDeviceCoroutine()
+		{
+			var loginMethod = Method<LoginUserResult>.Call ("loginWithIDFV", SystemInfo.deviceUniqueIdentifier);
+			loginMethod.OnResponse += HandleOnLogin;
+			yield return (Coroutine)loginMethod;
+		}
 
 		public static Coroutine CreateAndLoginWith (string email, string username, string password)
 		{
-			var createUserAndLoginMethod = LiveData.Instance.Call<LoginUserResult>(CreateUserMethodName, new  CreateUserOptions() {
+			var createUserAndLoginMethod = LiveData.Instance.Call<LoginUserResult> (CreateUserMethodName, new  CreateUserOptions () {
 				profile = new Profile()
 				{
 					name = username
@@ -286,6 +283,16 @@ namespace Meteor {
 			return createUserAndLoginMethod;
 		}
 
-		#endregion
+		static Accounts ()
+		{
+			Error = new Error () {
+				error = 500,
+				reason = "You have not attempted to login yet!"
+			};
+			// Check that we're connected to the server. If we're not, print an error.
+			if (!LiveData.Instance.Connected) {
+				Debug.LogWarning ("Meteor.Accounts: You are not connected to a server. Before you access methods on this service, make sure to connect.");
+			}
+		}
 	}
 }
