@@ -8,8 +8,6 @@ namespace Meteor
 {
 	public static class Accounts
 	{
-		public static Error Error { get; private set; }
-
 		public static string GuestEmailDomain = "example.com";
 		public static string FacebookScope = "email";
 		const string TokenKey = "Meteor.Accounts.Token";
@@ -22,12 +20,22 @@ namespace Meteor
 		const string BeginPasswordExchangeMethodName = "beginPasswordExchange";
 		static LoginUserResult _response;
 
-		public static event Action<Error, LoginUserResult> UserDidLogin;
+		public static event Action<Error, LoginUserResult> LoginMethodDidComplete;
 
 		public static Collection<MongoDocument> Users {
 			get;
 			private set;
 		}
+
+		public static bool IsLoggedIn {
+			get {
+				return Error == null &&
+					Response != null &&
+					Response.id != null;
+			}
+		}
+
+		public static Error Error { get; private set; }
 
 		public static LoginUserResult Response {
 			get {
@@ -78,7 +86,7 @@ namespace Meteor
 			#if FACEBOOK
 			Error = null;
 			var facebookHasInitialized = false;
-			FB.Init(() => facebookHasInitialized = true);
+			FB.Init (() => facebookHasInitialized = true);
 
 			while (!facebookHasInitialized) {
 				yield return null;
@@ -86,7 +94,7 @@ namespace Meteor
 
 
 			FBResult loginResult = null;
-			FB.Login("email", result => loginResult = result);
+			FB.Login ("email", result => loginResult = result);
 
 			while (loginResult == null) {
 				yield return null;
@@ -94,7 +102,7 @@ namespace Meteor
 
 			if (!FB.IsLoggedIn) {
 				Response = null;
-				Error = new Error() {
+				Error = new Error () {
 					error = 500,
 					reason = "Could not login to Facebook."
 				};
@@ -104,7 +112,7 @@ namespace Meteor
 			string meResultText = null;
 			string meResultError = null;
 			var meResult = false;
-			FB.API("/me",Facebook.HttpMethod.GET, result => {
+			FB.API ("/me", Facebook.HttpMethod.GET, result => {
 				meResult = true;
 				meResultError = result.Error;
 				meResultText = result.Text;
@@ -116,16 +124,16 @@ namespace Meteor
 
 			if (meResultText == null) {
 				Response = null;
-				Error = new Error() {
+				Error = new Error () {
 					error = 500,
 					reason = meResultError
 				};
 				yield break;
 			}
 
-			var fbUser = meResultText.Deserialize<FacebookUser>();
+			var fbUser = meResultText.Deserialize<FacebookUser> ();
 
-			var loginMethod = Method<LoginUserResult>.Call ("facebookLoginWithAccessToken", FB.UserId, fbUser.email ?? string.Format("-{0}@facebook.com", FB.UserId), fbUser.name, FB.AccessToken);
+			var loginMethod = Method<LoginUserResult>.Call ("facebookLoginWithAccessToken", FB.UserId, fbUser.email ?? string.Format ("-{0}@facebook.com", FB.UserId), fbUser.name, FB.AccessToken);
 			loginMethod.OnResponse += HandleOnLogin;
 			yield return (Coroutine)loginMethod;
 
@@ -176,9 +184,8 @@ namespace Meteor
 			Error = error;
 			Response = response;
 
-			if (UserDidLogin != null)
-			{
-				UserDidLogin (error, response);
+			if (LoginMethodDidComplete != null) {
+				LoginMethodDidComplete (error, response);
 			}
 
 			if (error == null) {
@@ -191,27 +198,27 @@ namespace Meteor
 		private static IEnumerator RegisterForPush ()
 		{
 			#if PUSH && UNITY_IOS
-			NotificationServices.RegisterForRemoteNotificationTypes(RemoteNotificationType.Alert | RemoteNotificationType.Badge | RemoteNotificationType.Sound);
+			NotificationServices.RegisterForRemoteNotificationTypes (RemoteNotificationType.Alert | RemoteNotificationType.Badge | RemoteNotificationType.Sound);
 			var deviceToken = NotificationServices.deviceToken;
 
 			while (deviceToken == null) {
-				if (!string.IsNullOrEmpty(NotificationServices.registrationError)) {
+				if (!string.IsNullOrEmpty (NotificationServices.registrationError)) {
 					yield break;
 				}
 				deviceToken = NotificationServices.deviceToken;
-				yield return new WaitForEndOfFrame();
+				yield return new WaitForEndOfFrame ();
 			}
 
 			// Convert device token to hex
-			var deviceTokenHex = new System.Text.StringBuilder(deviceToken.Length*2);
+			var deviceTokenHex = new System.Text.StringBuilder (deviceToken.Length * 2);
 
 			foreach (byte b in deviceToken) {
-				deviceTokenHex.Append(b.ToString("X2"));
+				deviceTokenHex.Append (b.ToString ("X2"));
 			}
 
-			Debug.Log(string.Format("deviceToken: {0}, Application.platform: {1}", deviceTokenHex, Application.platform.ToString()));
+			Debug.Log (string.Format ("deviceToken: {0}, Application.platform: {1}", deviceTokenHex, Application.platform.ToString ()));
 
-			var registerForPush = (Coroutine)Method.Call("registerForPush", Application.platform.ToString(), deviceTokenHex.ToString());
+			var registerForPush = (Coroutine)Method.Call ("registerForPush", Application.platform.ToString (), deviceTokenHex.ToString ());
 			#else
 			yield break;
 			#endif
@@ -259,7 +266,7 @@ namespace Meteor
 			return CoroutineHost.Instance.StartCoroutine (LoginWithDeviceCoroutine ());
 		}
 
-		static IEnumerator LoginWithDeviceCoroutine()
+		static IEnumerator LoginWithDeviceCoroutine ()
 		{
 			var loginMethod = Method<LoginUserResult>.Call ("loginWithIDFV", SystemInfo.deviceUniqueIdentifier);
 			loginMethod.OnResponse += HandleOnLogin;
@@ -293,6 +300,8 @@ namespace Meteor
 			if (!LiveData.Instance.Connected) {
 				Debug.LogWarning ("Meteor.Accounts: You are not connected to a server. Before you access methods on this service, make sure to connect.");
 			}
+
+			Users = Collection<MongoDocument>.Create ("users");
 		}
 	}
 }

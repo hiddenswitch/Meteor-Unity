@@ -224,7 +224,7 @@ namespace Meteor
 				{
 					Collections[collection].Added(socketMessage);
 				} else {
-					Debug.LogWarning(string.Format("LiveData: Unhandled record add.\nMessage:\n{0}",socketMessage));
+					Debug.LogWarning(string.Format("LiveData: Unhandled record add. Creating a collection to handle it.\nMessage:\n{0}",socketMessage));
 				}
 				break;
 			case ChangedMessage.changed:
@@ -233,7 +233,7 @@ namespace Meteor
 				{
 					Collections[cm.collection].Changed(cm.id, cm.cleared, cm.fields);
 				} else {
-					Debug.LogWarning(string.Format("LiveData: Unhandled record change.\nMessage:\n{0}",socketMessage));
+					Debug.LogWarning(string.Format("LiveData: Unhandled record change. Cannot recover this record later.\nMessage:\n{0}",socketMessage));
 				}
 				break;
 			case RemovedMessage.removed:
