@@ -20,6 +20,7 @@ namespace Meteor
 		const string BeginPasswordExchangeMethodName = "beginPasswordExchange";
 		static LoginUserResult _response;
 
+		public static event Action<Error, LoginUserResult> LoginMethodWillComplete;
 		public static event Action<Error, LoginUserResult> LoginMethodDidComplete;
 
 		public static Collection<MongoDocument> Users {
@@ -68,11 +69,18 @@ namespace Meteor
 
 		public static string Token {
 			get {
-				if (Response == null) {
-					return PlayerPrefs.GetString (TokenKey, null);
-				} else {
+				if (Response != null) {
 					return Response.token;
+
 				}
+
+				string storedToken = PlayerPrefs.GetString (TokenKey, null);
+
+				if (storedToken != null) {
+					return storedToken;
+				}
+
+				return null;
 			}
 		}
 
@@ -181,17 +189,22 @@ namespace Meteor
 
 		static void HandleOnLogin (Error error, LoginUserResult response)
 		{
+			if (LoginMethodWillComplete != null) {
+				LoginMethodWillComplete (error, response);
+			}
+
 			Error = error;
 			Response = response;
 
-			if (LoginMethodDidComplete != null) {
-				LoginMethodDidComplete (error, response);
-			}
-
 			if (error == null) {
+				// Register for push
 				CoroutineHost.Instance.StartCoroutine (RegisterForPush ());
 			} else {
 				Debug.LogWarning (error.reason);
+			}
+
+			if (LoginMethodDidComplete != null) {
+				LoginMethodDidComplete (error, response);
 			}
 		}
 

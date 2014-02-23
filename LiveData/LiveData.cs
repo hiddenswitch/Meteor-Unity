@@ -40,7 +40,8 @@ namespace Meteor
 		/// <summary>
 		/// A successful connection event. The first argument is the session ID.
 		/// </summary>
-		public event Action<string> OnConnected;
+		public event Action<string> WillConnect;
+		public event Action<string> DidConnect;
 		public event Action OnReconnected;
 
 		public LiveData()
@@ -62,7 +63,7 @@ namespace Meteor
 			return CoroutineHost.Instance.StartCoroutine (ConnectCoroutine (url));
 		}
 
-		void HandleOnConnected (string obj)
+		void HandleWillConnect (string obj)
 		{
 			Connected = true;
 			TimedOut = false;
@@ -84,7 +85,7 @@ namespace Meteor
 
 		private IEnumerator ConnectCoroutine(string url) {
 			TimedOut = false;
-			OnConnected += HandleOnConnected;
+			WillConnect += HandleWillConnect;
 			CoroutineHost.Instance.StartCoroutine (TimeoutCoroutine (5.0f));
 			CoroutineHost.Instance.StartCoroutine(Connector.Dispatcher());
 			Connector.OnTextMessageRecv += HandleOnTextMessageRecv;
@@ -257,10 +258,17 @@ namespace Meteor
 				break;
 			case ConnectedMessage.connected:
 				ConnectedMessage connm = socketMessage.Deserialize<ConnectedMessage>();
-				if (OnConnected != null)
+
+				if (WillConnect != null)
 				{
-					OnConnected(connm.session);
+					WillConnect(connm.session);
 				}
+
+				if (DidConnect != null)
+				{
+					DidConnect(connm.session);
+				}
+
 				break;
 			case ResultMessage.result:
 				ResultMessage resultm = null;
