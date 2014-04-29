@@ -43,7 +43,7 @@ A Unity SDK for Meteor.
     # Add the submodules and initialize them. You can use the Meteor-Unity repo directly, or fork it so you can make changes to it (my practice).
     git submodule add git@github.com:hiddenswitch/Meteor-Unity.git Assets/Scripts/Meteor
     git submodule update --init --recursive
-    git -am "Adding submodules"
+    git commit -am "Adding submodules"
     ```
 
   5. Create a `meteor` project, add the `accounts-password` package, and run the project.
@@ -75,7 +75,7 @@ A Unity SDK for Meteor.
   		var collection = Meteor.Collection<DocumentType>.Create ("collectionName");
   
   		// Add some handlers
-  		collection.OnAdded += (string id, DocumentType document) => {
+  		collection.DidAddRecord += (string id, DocumentType document) => {
   			Debug.Log(string.Format("Document added:\n{0}", document.Serialize()));
   		};
   
