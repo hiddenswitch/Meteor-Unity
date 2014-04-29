@@ -66,9 +66,9 @@ A Unity SDK for Meteor.
 
   		// Connect to the meteor server. Yields when you're connected
   		if (production) {
-  			yield return Meteor.Connection.Connect ("ws://localhost:3000/websocket");
+  		  yield return Meteor.Connection.Connect ("wss://productionserver.com/websocket");
   		} else {
-  			yield return Meteor.Connection.Connect ("wss://productionserver.com/websocket");
+  		  yield return Meteor.Connection.Connect ("ws://localhost:3000/websocket");
   		}
   
   		// Login
