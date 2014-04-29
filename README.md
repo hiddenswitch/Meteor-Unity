@@ -58,6 +58,9 @@ A Unity SDK for Meteor.
   6. Connect to your server from Unity. All `meteor` work should live in coroutines.
   
     ```c#
+    // This will give you access to a .Serialize() method on every object to turn it into
+    // its JSON representation
+    using Extensions;
     IEnumerator MeteorExample() {
       var production = false;
 
