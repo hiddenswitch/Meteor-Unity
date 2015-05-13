@@ -35,7 +35,7 @@ A Unity SDK for Meteor.
   
     ```sh
     # Grab my handy and advanced .gitignore. This command downloads something from the Internet and saves it to a file.
-    curl https://raw2.github.com/hiddenswitch/Meteor-Unity-Tests/develop/.gitignore > .gitignore
+    curl https://github.com/hiddenswitch/Meteor-Unity-Tests/blob/develop/.gitignore > .gitignore
     # Initialize git.
     git init
     # Make this your first commit
@@ -49,10 +49,10 @@ A Unity SDK for Meteor.
   5. Create a `meteor` project, add the `accounts-password` package, and run the project.
   
     ```sh
-    mrt create Web
+    meteor create Web
     cd Web
-    mrt add accounts-password
-    mrt run
+    meteor add accounts-password
+    meteor run
     ```
   
   6. Connect to your server from Unity. All `meteor` work should live in coroutines.
