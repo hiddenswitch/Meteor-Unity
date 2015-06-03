@@ -43,7 +43,7 @@ A Unity SDK for Meteor.
     # Add the submodules and initialize them. You can use the Meteor-Unity repo directly, or fork it so you can make changes to it (my practice).
     git submodule add git@github.com:hiddenswitch/Meteor-Unity.git Assets/Scripts/Meteor
     git submodule update --init --recursive
-    git -am "Adding submodules"
+    git commit -am "Adding submodules"
     ```
 
   5. Create a `meteor` project, add the `accounts-password` package, and run the project.
@@ -58,14 +58,17 @@ A Unity SDK for Meteor.
   6. Connect to your server from Unity. All `meteor` work should live in coroutines.
   
     ```c#
+    // This will give you access to a .Serialize() method on every object to turn it into
+    // its JSON representation
+    using Extensions;
     IEnumerator MeteorExample() {
       var production = false;
 
   		// Connect to the meteor server. Yields when you're connected
   		if (production) {
-  			yield return Meteor.Connection.Connect ("ws://localhost:3000/websocket");
+  		  yield return Meteor.Connection.Connect ("wss://productionserver.com/websocket");
   		} else {
-  			yield return Meteor.Connection.Connect ("wss://productionserver.com/websocket");
+  		  yield return Meteor.Connection.Connect ("ws://localhost:3000/websocket");
   		}
   
   		// Login
@@ -75,7 +78,7 @@ A Unity SDK for Meteor.
   		var collection = Meteor.Collection<DocumentType>.Create ("collectionName");
   
   		// Add some handlers
-  		collection.OnAdded += (string id, DocumentType document) => {
+  		collection.DidAddRecord += (string id, DocumentType document) => {
   			Debug.Log(string.Format("Document added:\n{0}", document.Serialize()));
   		};
   
