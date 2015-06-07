@@ -1,4 +1,3 @@
-#define USE_GZIP
 using System;
 using System.Collections.Generic;
 using System.IO;
