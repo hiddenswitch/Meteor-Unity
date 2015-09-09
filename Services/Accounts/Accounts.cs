@@ -211,14 +211,14 @@ namespace Meteor
 		private static IEnumerator RegisterForPush ()
 		{
 			#if PUSH && UNITY_IOS
-			NotificationServices.RegisterForRemoteNotificationTypes (RemoteNotificationType.Alert | RemoteNotificationType.Badge | RemoteNotificationType.Sound);
-			var deviceToken = NotificationServices.deviceToken;
+			UnityEngine.iOS.NotificationServices.RegisterForNotifications (UnityEngine.iOS.NotificationType.Alert | UnityEngine.iOS.NotificationType.Badge | UnityEngine.iOS.NotificationType.Sound);
+			var deviceToken = UnityEngine.iOS.NotificationServices.deviceToken;
 
 			while (deviceToken == null) {
-				if (!string.IsNullOrEmpty (NotificationServices.registrationError)) {
+				if (!string.IsNullOrEmpty (UnityEngine.iOS.NotificationServices.registrationError)) {
 					yield break;
 				}
-				deviceToken = NotificationServices.deviceToken;
+				deviceToken = UnityEngine.iOS.NotificationServices.deviceToken;
 				yield return new WaitForEndOfFrame ();
 			}
 

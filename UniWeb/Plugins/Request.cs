@@ -1,4 +1,3 @@
-#define USE_GZIP
 #define USE_KEEPALIVE
 #define USE_COOKIES
 #define USE_SSL
