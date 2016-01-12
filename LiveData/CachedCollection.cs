@@ -1,6 +1,6 @@
 using System;
 using System.Collections;
-using Extensions;
+using Meteor.Extensions;
 
 namespace Meteor
 {
@@ -9,6 +9,7 @@ namespace Meteor
 	{
 		protected CachedCollection() : base() {}
 
+		/*
 		public static Collection<TRecordType> CreateFromUrl(string name, string url) {
 			var collection = Collection<TRecordType>.Create (name);
 			CoroutineHost.Instance.StartCoroutine (DownloadFromUrl(collection, url));
@@ -33,6 +34,7 @@ namespace Meteor
 				}
 			}
 		}
+		*/
 	}
 }
 

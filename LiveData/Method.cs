@@ -1,7 +1,7 @@
 using System;
 using System.Collections;
 using UnityEngine;
-using Extensions;
+using Meteor.Extensions;
 
 namespace Meteor
 {

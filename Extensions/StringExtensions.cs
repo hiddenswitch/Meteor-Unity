@@ -1,6 +1,6 @@
 using System;
 
-namespace Extensions {
+namespace Meteor.Extensions {
     public static partial class StringExtensions
     {
         /// <summary>

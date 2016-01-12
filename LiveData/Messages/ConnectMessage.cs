@@ -1,4 +1,4 @@
-using Extensions;
+using Meteor.Extensions;
 
 namespace Meteor
 {

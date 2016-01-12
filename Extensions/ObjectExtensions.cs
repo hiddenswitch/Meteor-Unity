@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Collections;
 
-namespace Extensions {
+namespace Meteor.Extensions {
     public static partial class ObjectExtensions
     {
         /// <summary>
