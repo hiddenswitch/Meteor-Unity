@@ -88,15 +88,28 @@ namespace Meteor
 			}
 		}
 
+		void SendConnectMessage (string version = null)
+		{
+			var message = "";
+
+			if (version == null) {
+				message = ConnectMessage.connectMessage;
+			} else {
+				message = (new ConnectMessage () { version = version }).Serialize ();
+			}
+
+			Connector.Send (System.Text.Encoding.UTF8.GetBytes (message));
+		}
+
 		private IEnumerator ConnectCoroutine (string url)
 		{
 			TimedOut = false;
 			WillConnect += HandleWillConnect;
 			CoroutineHost.Instance.StartCoroutine (TimeoutCoroutine (5.0f));
 			CoroutineHost.Instance.StartCoroutine (Dispatcher ());
-			Connector = new WebSocket(new Uri (url));
+			Connector = new WebSocket (new Uri (url));
 			yield return Connector.Connect ();
-			Connector.Send (System.Text.Encoding.UTF8.GetBytes(ConnectMessage.connectMessage));
+			SendConnectMessage ();
 
 			while (!Connected) {
 				if (TimedOut) {
@@ -171,7 +184,7 @@ namespace Meteor
 
 		public void Send (object obj)
 		{
-			var s = System.Text.Encoding.UTF8.GetBytes(obj.Serialize ());
+			var s = System.Text.Encoding.UTF8.GetBytes (obj.Serialize ());
 
 			if (Logging) {
 				Debug.Log (s);
@@ -247,7 +260,9 @@ namespace Meteor
 				if (Collections.Contains (collection)) {
 					Collections [collection].Added (socketMessage);
 				} else {
-					Debug.LogWarning (string.Format ("LiveData: Unhandled record add. Creating a collection to handle it.\nMessage:\n{0}", socketMessage));
+					Debug.Log (string.Format ("LiveData: Unhandled record add. Creating a collection to handle it.\nMessage:\n{0}", socketMessage));
+					var handlingCollection = Meteor.Collection<MongoDocument>.Create (collection) as ICollection;
+					handlingCollection.Added (socketMessage);
 				}
 				break;
 			case ChangedMessage.changed:
@@ -288,6 +303,10 @@ namespace Meteor
 				}
 
 				break;
+			case FailedMessage.failed:
+				FailedMessage failedMessage = socketMessage.Deserialize<FailedMessage> ();
+				SendConnectMessage (failedMessage.version);
+				break;
 			case ResultMessage.result:
 				ResultMessage resultm = null;
 				resultm = socketMessage.Deserialize<ResultMessage> ();
@@ -309,10 +328,10 @@ namespace Meteor
 				break;
 			case PingMessage.ping:
 				PingMessage pingMessage = socketMessage.Deserialize<PingMessage> ();
-				var pongMessage = new PongMessage() {
+				var pongMessage = new PongMessage () {
 					id = pingMessage.id
 				};
-				Send(pingMessage);
+				Send (pingMessage);
 				break;
 			default:
 				if (!socketMessage.Contains ("server_id")) {
