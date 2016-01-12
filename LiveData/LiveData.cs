@@ -171,7 +171,7 @@ namespace Meteor
 
 		public void Send (object obj)
 		{
-			var s = obj.Serialize ();
+			var s = System.Text.Encoding.UTF8.GetBytes(obj.Serialize ());
 
 			if (Logging) {
 				Debug.Log (s);
@@ -306,6 +306,13 @@ namespace Meteor
 						Debug.LogError (string.Format ("LiveData: An updated message was received, but the method could not be found.\nMethod: {0}", method));
 					}
 				}
+				break;
+			case PingMessage.ping:
+				PingMessage pingMessage = socketMessage.Deserialize<PingMessage> ();
+				var pongMessage = new PongMessage() {
+					id = pingMessage.id
+				};
+				Send(pingMessage);
 				break;
 			default:
 				if (!socketMessage.Contains ("server_id")) {
