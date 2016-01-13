@@ -5,7 +5,7 @@ namespace Meteor
 	public class ConnectMessage : Message
 	{
 		const string connect = "connect";
-		const string versionConst = "1";
+		const string versionConst = "pre2";
 		public static string connectMessage;
 		public string version;
 		public string[] support;
@@ -14,7 +14,7 @@ namespace Meteor
 		{
 			msg = connect;
 			version = versionConst;
-			support = new[] { "pre2", "1" };
+			support = new[] { "pre2", "pre1" };
 		}
 
 		static ConnectMessage()

@@ -32,6 +32,8 @@ namespace Meteor
 			}
 		}
 
+		int connectorInstanceId;
+
 		/// <summary>
 		/// Enable packet logging.
 		/// </summary>
@@ -105,9 +107,10 @@ namespace Meteor
 		{
 			TimedOut = false;
 			WillConnect += HandleWillConnect;
-			CoroutineHost.Instance.StartCoroutine (TimeoutCoroutine (5.0f));
-			CoroutineHost.Instance.StartCoroutine (Dispatcher ());
+			CoroutineHost.Instance.StartCoroutine (TimeoutCoroutine (10.0f));
 			Connector = new WebSocket (new Uri (url));
+			connectorInstanceId = Connector.GetHashCode();
+			CoroutineHost.Instance.StartCoroutine (Dispatcher ());
 			yield return Connector.Connect ();
 			SendConnectMessage ();
 
@@ -123,14 +126,11 @@ namespace Meteor
 
 		private IEnumerator Dispatcher ()
 		{
-			while (!Connected) {
-				yield return null;
-			}
-
-			while (Connected) {
+			while (connectorInstanceId == Connector.GetHashCode ()) {
 				var received = Connector.RecvString ();
 				if (received == null) {
 					yield return null;
+					continue;
 				}
 				HandleOnTextMessageRecv (received);
 			}
@@ -332,6 +332,8 @@ namespace Meteor
 					id = pingMessage.id
 				};
 				Send (pingMessage);
+				break;
+			case PongMessage.pong:
 				break;
 			default:
 				if (!socketMessage.Contains ("server_id")) {

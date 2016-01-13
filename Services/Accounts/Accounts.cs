@@ -200,7 +200,8 @@ namespace Meteor
 				// Register for push
 				CoroutineHost.Instance.StartCoroutine (RegisterForPush ());
 			} else {
-				Debug.LogWarning (error.reason);
+				Debug.LogError (error.reason);
+				Debug.LogError (error.details);
 			}
 
 			if (LoginMethodDidComplete != null) {
@@ -271,7 +272,7 @@ namespace Meteor
 			PlayerPrefs.SetString (GuestUsernameKey, guestUsername);
 			PlayerPrefs.SetString (GuestEmailKey, guestEmail);
 			PlayerPrefs.SetString (GuestPasswordKey, guestPassword);
-			yield return Accounts.CreateAndLoginWith (guestUsername, guestEmail, guestPassword);
+			yield return (Coroutine)Accounts.CreateAndLoginWith (guestUsername, guestEmail, guestPassword);
 		}
 
 		public static Coroutine LoginWithDevice ()
@@ -286,13 +287,13 @@ namespace Meteor
 			yield return (Coroutine)loginMethod;
 		}
 
-		public static Coroutine CreateAndLoginWith (string email, string username, string password)
+		public static Method<LoginUserResult> CreateAndLoginWith (string email, string username, string password)
 		{
 			var createUserAndLoginMethod = LiveData.Instance.Call<LoginUserResult> (CreateUserMethodName, new  CreateUserOptions () {
-				profile = new Profile()
-				{
-					name = username
-				},
+//				profile = new Profile()
+//				{
+//					name = username
+//				},
 				email = email,
 				password = password,
 				username = username
