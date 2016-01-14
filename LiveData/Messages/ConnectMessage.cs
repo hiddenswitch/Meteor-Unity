@@ -1,11 +1,11 @@
-using Extensions;
+using Meteor.Extensions;
 
 namespace Meteor
 {
 	public class ConnectMessage : Message
 	{
 		const string connect = "connect";
-		const string pre = "pre1";
+		const string versionConst = "pre2";
 		public static string connectMessage;
 		public string version;
 		public string[] support;
@@ -13,8 +13,8 @@ namespace Meteor
 		public ConnectMessage()
 		{
 			msg = connect;
-			version = pre;
-			support = new[] { "pre1" };
+			version = versionConst;
+			support = new[] { "pre2", "pre1" };
 		}
 
 		static ConnectMessage()

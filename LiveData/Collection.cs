@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Reflection;
 using JsonFx.Json;
-using Extensions;
+using Meteor.Extensions;
 
 namespace Meteor
 {

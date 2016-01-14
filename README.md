@@ -1,25 +1,19 @@
 Meteor-Unity
 ============
 
-A Unity SDK for Meteor.
+A Unity SDK for Meteor. Supports Unity3D 5.0.0 and higher!
 
 ##### Getting started
 
-  1. Install `meteor` and `meteorite`
+  1. Install `meteor` and `git`
  
     ```sh
-    # Install Brew if it isn't already installed
-    ruby -e "$(curl -fsSL https://raw.github.com/mxcl/homebrew/go)"
-    # Install git if it isn't already installed
-    brew install git
-    # Install node
-    brew install node
-    # Install npm
-    brew install npm
     # Install meteor
     curl https://install.meteor.com/ | sh
-    # Install meteor's package manager, meteorite
-    sudo -H npm install -g meteorite
+    # Install brew
+    ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+    # Install git
+    brew install git
     ```
 
   2. Create a new Unity project.
@@ -36,13 +30,13 @@ A Unity SDK for Meteor.
     ```sh
     # Grab my handy and advanced .gitignore. This command downloads something from the Internet and saves it to a file.
     curl https://github.com/hiddenswitch/Meteor-Unity-Tests/blob/develop/.gitignore > .gitignore
-    # Initialize git.
+    # Initialize git for the root of your project.
     git init
     # Make this your first commit
     git -am "Initial commit."
     # Add the submodules and initialize them. You can use the Meteor-Unity repo directly, or fork it so you can make changes to it (my practice).
-    git submodule add git@github.com:hiddenswitch/Meteor-Unity.git Assets/Scripts/Meteor
-    git submodule update --init --recursive
+    git submodule add https://github.com/hiddenswitch/Meteor-Unity.git Assets/Scripts/Meteor-Unity
+    git submodule update --init
     git commit -am "Adding submodules"
     ```
 
@@ -52,7 +46,7 @@ A Unity SDK for Meteor.
     meteor create Web
     cd Web
     meteor add accounts-password
-    meteor run
+    meteor
     ```
   
   6. Connect to your server from Unity. All `meteor` work should live in coroutines.
@@ -60,7 +54,7 @@ A Unity SDK for Meteor.
     ```c#
     // This will give you access to a .Serialize() method on every object to turn it into
     // its JSON representation
-    using Extensions;
+    using Meteor.Extensions;
     IEnumerator MeteorExample() {
       var production = false;
 
@@ -72,7 +66,7 @@ A Unity SDK for Meteor.
   		}
   
   		// Login
-  		yield return Meteor.Accounts.LoginAsGuest ();
+  		yield return (Coroutine)Meteor.Accounts.LoginAsGuest ();
   
   		// Create a collection
   		var collection = Meteor.Collection<DocumentType>.Create ("collectionName");

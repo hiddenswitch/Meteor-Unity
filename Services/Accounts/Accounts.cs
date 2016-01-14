@@ -2,7 +2,7 @@
 using System.Collections;
 using UnityEngine;
 using Meteor;
-using Extensions;
+using Meteor.Extensions;
 
 namespace Meteor
 {
@@ -174,8 +174,8 @@ namespace Meteor
 
 		public static Method<LoginUserResult> LoginWith (string username, string password)
 		{
-			var loginMethod = LiveData.Instance.Call<LoginUserResult> (LoginUserMethodName, new InsecureLoginUserOptions () {
-				password = password,
+			var loginMethod = LiveData.Instance.Call<LoginUserResult> (LoginUserMethodName, new SecureLoginUserOptions () {
+				password = new PasswordDigest(password),
 				user = new LoginUserUser()
 				{
 					username = username
@@ -200,7 +200,8 @@ namespace Meteor
 				// Register for push
 				CoroutineHost.Instance.StartCoroutine (RegisterForPush ());
 			} else {
-				Debug.LogWarning (error.reason);
+				Debug.LogError (error.reason);
+				Debug.LogError (error.details);
 			}
 
 			if (LoginMethodDidComplete != null) {
@@ -244,19 +245,20 @@ namespace Meteor
 
 		static IEnumerator LoginAsGuestCoroutine ()
 		{
-			var tokenLogin = LoginWithToken ();
-			// If we can login with token, go for it.
-			yield return (Coroutine)tokenLogin;
-			if (tokenLogin.Error == null) {
-				yield break;
+			if (!string.IsNullOrEmpty(Token)) {
+				var tokenLogin = LoginWithToken ();
+				// If we can login with token, go for it.
+				yield return (Coroutine)tokenLogin;
+				if (tokenLogin.Error == null) {
+					yield break;
+				}
 			}
-			// Failed to login with token
+			// Failed to login with token or we don't have a token. So create an account if we don't hvae saved credentials
 
-			// Create a guest account.
 			var guestUsername = PlayerPrefs.GetString (GuestUsernameKey, null);
 			var guestEmail = PlayerPrefs.GetString (GuestEmailKey, null);
 			var guestPassword = PlayerPrefs.GetString (GuestPasswordKey, null);
-			Debug.Log (guestUsername);
+
 			if (!string.IsNullOrEmpty (guestUsername)) {
 				yield return (Coroutine)Accounts.LoginWith (guestUsername, guestPassword);
 				if (Error == null) {
@@ -264,37 +266,22 @@ namespace Meteor
 				}
 			}
 
+			// If we still have an 
+
 			var padding = UnityEngine.Random.Range (0, Int32.MaxValue);
-			guestUsername = string.Format ("anonymous{0}@{1}", padding, GuestEmailDomain);
-			guestEmail = string.Format ("player{0}", padding);
+			guestEmail = string.Format ("anonymous{0}@{1}", padding, GuestEmailDomain);
+			guestUsername = string.Format ("player{0}", padding);
 			guestPassword = UnityEngine.Random.Range (0, Int32.MaxValue).ToString ();
 			PlayerPrefs.SetString (GuestUsernameKey, guestUsername);
 			PlayerPrefs.SetString (GuestEmailKey, guestEmail);
 			PlayerPrefs.SetString (GuestPasswordKey, guestPassword);
-			yield return Accounts.CreateAndLoginWith (guestUsername, guestEmail, guestPassword);
+			yield return (Coroutine)Accounts.CreateAndLoginWith (guestEmail, guestUsername, guestPassword);
 		}
 
-		public static Coroutine LoginWithDevice ()
-		{
-			return CoroutineHost.Instance.StartCoroutine (LoginWithDeviceCoroutine ());
-		}
-
-		static IEnumerator LoginWithDeviceCoroutine ()
-		{
-			var loginMethod = Method<LoginUserResult>.Call ("loginWithIDFV", SystemInfo.deviceUniqueIdentifier);
-			loginMethod.OnResponse += HandleOnLogin;
-			yield return (Coroutine)loginMethod;
-		}
-
-		public static Coroutine CreateAndLoginWith (string email, string username, string password)
+		public static Method<LoginUserResult> CreateAndLoginWith (string email, string username, string password)
 		{
 			var createUserAndLoginMethod = LiveData.Instance.Call<LoginUserResult> (CreateUserMethodName, new  CreateUserOptions () {
-				profile = new Profile()
-				{
-					name = username
-				},
-				email = email,
-				password = password,
+				password = new PasswordDigest(password),
 				username = username
 			});
 
