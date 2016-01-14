@@ -1,7 +1,7 @@
 Meteor-Unity
 ============
 
-A Unity SDK for Meteor.
+A Unity SDK for Meteor. Supports Unity3D 5.0.0 and higher!
 
 ##### Getting started
 
