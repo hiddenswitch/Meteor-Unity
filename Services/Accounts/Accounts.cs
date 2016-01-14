@@ -278,18 +278,6 @@ namespace Meteor
 			yield return (Coroutine)Accounts.CreateAndLoginWith (guestEmail, guestUsername, guestPassword);
 		}
 
-		public static Coroutine LoginWithDevice ()
-		{
-			return CoroutineHost.Instance.StartCoroutine (LoginWithDeviceCoroutine ());
-		}
-
-		static IEnumerator LoginWithDeviceCoroutine ()
-		{
-			var loginMethod = Method<LoginUserResult>.Call ("loginWithIDFV", SystemInfo.deviceUniqueIdentifier);
-			loginMethod.OnResponse += HandleOnLogin;
-			yield return (Coroutine)loginMethod;
-		}
-
 		public static Method<LoginUserResult> CreateAndLoginWith (string email, string username, string password)
 		{
 			var createUserAndLoginMethod = LiveData.Instance.Call<LoginUserResult> (CreateUserMethodName, new  CreateUserOptions () {
