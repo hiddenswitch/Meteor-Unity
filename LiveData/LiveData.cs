@@ -184,10 +184,11 @@ namespace Meteor
 
 		public void Send (object obj)
 		{
-			var s = System.Text.Encoding.UTF8.GetBytes (obj.Serialize ());
+			var str = obj.Serialize ();
+			var s = System.Text.Encoding.UTF8.GetBytes (str);
 
 			if (Logging) {
-				Debug.Log (s);
+				Debug.Log (str);
 			}
 
 			Connector.Send (s);
