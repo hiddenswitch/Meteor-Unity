@@ -1,5 +1,6 @@
 namespace Meteor
 {
+	[System.Serializable]
 	public class Error
 	{
 		public string reason;

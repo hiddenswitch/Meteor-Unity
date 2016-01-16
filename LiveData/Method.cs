@@ -74,6 +74,11 @@ namespace Meteor
 			yield break;
 		}
 
+		public virtual Coroutine ExecuteAsync(MethodHandler callback=null) {
+			this.OnUntypedResponse += callback;
+			return (Coroutine)this;
+		}
+
 		public static implicit operator Coroutine(Method method) {
 			if (method == null) {
 				return null;
@@ -146,6 +151,11 @@ namespace Meteor
 			OnResponse -= typedCompleted;
 
 			yield break;
+		}
+
+		public virtual Coroutine ExecuteAsync(MethodHandler<TResponseType> callback=null) {
+			this.OnResponse += callback;
+			return (Coroutine)this;
 		}
 
 		public static implicit operator Coroutine(Method<TResponseType> method) {
