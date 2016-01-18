@@ -13,9 +13,14 @@ namespace Meteor
 
 		public MethodMessage Message;
 		public event MethodHandler OnUntypedResponse;
+		public string Name {
+			get; protected set;
+		}
 
 		public static Method Call(string name, params object[] args) {
-			return LiveData.Instance.Call (name, args);
+			var methodCall = LiveData.Instance.Call (name, args);
+			methodCall.Name = name;
+			return methodCall;
 		}
 
 		public virtual void Callback(Error error, object response)
@@ -97,7 +102,9 @@ namespace Meteor
 		}
 
 		public static new Method<TResponseType> Call(string name, params object[] args) {
-			return LiveData.Instance.Call<TResponseType> (name, args);
+			var methodCall = LiveData.Instance.Call<TResponseType> (name, args);
+			methodCall.Name = name;
+			return methodCall;
 		}
 
 		public event MethodHandler<TResponseType> OnResponse;
@@ -116,7 +123,20 @@ namespace Meteor
 
 		public override void Callback(Error error, object response)
 		{
-			TResponseType r = response.Coerce<TResponseType>();
+			TResponseType r = default(TResponseType);
+			try {
+				if (response != null) {
+					r = response.Coerce<TResponseType>();
+				} else if (response == null
+					&& typeof(TResponseType).IsValueType
+					&& error == null) {
+					Debug.LogError(string.Format("Returned null when a value type was expected and no error was found.\nMethod: {0}", this));
+				}
+			} catch (JsonFx.Json.JsonTypeCoercionException ex) {
+				if (error == null) {
+					Debug.LogWarning(string.Format("Failed to convert method response type to specified type in call and no error was found.\nMethod: {0}", this));
+				}
+			}
 
 			if (OnResponse != null)
 			{
@@ -166,6 +186,10 @@ namespace Meteor
 			return CoroutineHost.Instance.StartCoroutine (method.Execute ());
 		}
 
+		public override string ToString ()
+		{
+			return string.Format ("[Method: Name={0}, Response={1}, ResponseType={2}]", Name, Response, ResponseType.Name);
+		}
 		#endregion
 	}
 }

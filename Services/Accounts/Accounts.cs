@@ -86,6 +86,11 @@ namespace Meteor
 
 		public static Coroutine LoginWithFacebook ()
 		{
+			// Check that we're connected to the server. If we're not, print an error.
+			if (!LiveData.Instance.Connected) {
+				Debug.LogWarning ("Meteor.Accounts: You are not connected to a server. Before you access methods on this service, make sure to connect.");
+			}
+
 			return CoroutineHost.Instance.StartCoroutine (LoginWithFacebookCoroutine ());
 		}
 
@@ -163,6 +168,11 @@ namespace Meteor
 
 		public static Method<LoginUserResult> LoginWithToken ()
 		{
+			// Check that we're connected to the server. If we're not, print an error.
+			if (!LiveData.Instance.Connected) {
+				Debug.LogWarning ("Meteor.Accounts: You are not connected to a server. Before you access methods on this service, make sure to connect.");
+			}
+
 			var loginMethod = LiveData.Instance.Call<LoginUserResult> (LoginUserMethodName, new Meteor.LoginWithTokenOptions () {
 				resume = Token
 			});
@@ -174,6 +184,11 @@ namespace Meteor
 
 		public static Method<LoginUserResult> LoginWith (string username, string password)
 		{
+			// Check that we're connected to the server. If we're not, print an error.
+			if (!LiveData.Instance.Connected) {
+				Debug.LogWarning ("Meteor.Accounts: You are not connected to a server. Before you access methods on this service, make sure to connect.");
+			}
+
 			var loginMethod = LiveData.Instance.Call<LoginUserResult> (LoginUserMethodName, new SecureLoginUserOptions () {
 				password = new PasswordDigest(password),
 				user = new LoginUserUser()
@@ -240,6 +255,11 @@ namespace Meteor
 
 		public static Coroutine LoginAsGuest ()
 		{
+			// Check that we're connected to the server. If we're not, print an error.
+			if (!LiveData.Instance.Connected) {
+				Debug.LogWarning ("Meteor.Accounts: You are not connected to a server. Before you access methods on this service, make sure to connect.");
+			}
+
 			return CoroutineHost.Instance.StartCoroutine (LoginAsGuestCoroutine ());
 		}
 
@@ -296,10 +316,6 @@ namespace Meteor
 				error = 500,
 				reason = "You have not attempted to login yet!"
 			};
-			// Check that we're connected to the server. If we're not, print an error.
-			if (!LiveData.Instance.Connected) {
-				Debug.LogWarning ("Meteor.Accounts: You are not connected to a server. Before you access methods on this service, make sure to connect.");
-			}
 
 			Users = Collection<MongoDocument>.Create ("users");
 		}

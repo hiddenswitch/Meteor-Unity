@@ -493,6 +493,11 @@ namespace JsonFx.Json
 				return;
 			}
 
+			if (value is byte[]) {
+				this.Write((byte[])value);
+				return;
+			}
+
 			// IDictionary test must happen BEFORE IEnumerable test
 			// since IDictionary implements IEnumerable
 			if (value is IDictionary)
@@ -594,6 +599,16 @@ namespace JsonFx.Json
 					this.depth--;
 				}
 			}
+		}
+
+		public virtual void Write(byte[] value) {
+			if (this.settings.ByteArraySerializer != null)
+			{
+				this.settings.ByteArraySerializer(this, value);
+				return;
+			}
+
+			this.WriteArray((IEnumerable)value);
 		}
 
 		public virtual void WriteBase64(byte[] value)
