@@ -139,6 +139,15 @@ namespace JsonFx.Json
 			get { return this.byteArraySerializer; }
 			set { this.byteArraySerializer = value; }
 		}
+
+		public virtual bool SerializeProperties {
+			get; set;
+		}
+
+		public virtual bool EncodeEnumsAsNumber {
+			get; set;
+		}
+
 		#endregion Properties
 	}
 }

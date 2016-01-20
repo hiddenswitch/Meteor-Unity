@@ -674,6 +674,11 @@ namespace JsonFx.Json
 
 		public virtual void Write(Enum value)
 		{
+			if (settings.EncodeEnumsAsNumber) {
+				this.Write(Convert.ToInt32(value));
+				return;
+			}
+
 			string enumName = null;
 
 			Type type = value.GetType();
@@ -700,7 +705,7 @@ namespace JsonFx.Json
 					enumName = value.ToString("f");
 				}
 			}
-
+				
 			this.Write(enumName);
 		}
 
@@ -1115,48 +1120,50 @@ namespace JsonFx.Json
 
 				bool anonymousType = type.IsGenericType && type.Name.StartsWith(JsonWriter.AnonymousTypePrefix);
 
-				// serialize public properties
-				PropertyInfo[] properties = type.GetProperties();
-				foreach (PropertyInfo property in properties)
-				{
-					if (!property.CanRead)
+				if (this.settings.SerializeProperties) {
+					// serialize public properties
+					PropertyInfo[] properties = type.GetProperties();
+					foreach (PropertyInfo property in properties)
 					{
-						continue;
-					}
+						if (!property.CanRead)
+						{
+							continue;
+						}
 
-					if (!property.CanWrite && !anonymousType)
-					{
-						continue;
-					}
+						if (!property.CanWrite && !anonymousType)
+						{
+							continue;
+						}
 
-					if (this.IsIgnored(type, property, value))
-					{
-						continue;
-					}
+						if (this.IsIgnored(type, property, value))
+						{
+							continue;
+						}
 
-					object propertyValue = property.GetValue(value, null);
-					if (this.IsDefaultValue(property, propertyValue))
-					{
-						continue;
-					}
+						object propertyValue = property.GetValue(value, null);
+						if (this.IsDefaultValue(property, propertyValue))
+						{
+							continue;
+						}
 
-					if (appendDelim)
-					{
-						this.WriteObjectPropertyDelim();
-					}
-					else
-					{
-						appendDelim = true;
-					}
+						if (appendDelim)
+						{
+							this.WriteObjectPropertyDelim();
+						}
+						else
+						{
+							appendDelim = true;
+						}
 
-					// use Attributes here to control naming
-					string propertyName = JsonNameAttribute.GetJsonName(property);
-					if (String.IsNullOrEmpty(propertyName))
-					{
-						propertyName = property.Name;
-					}
+						// use Attributes here to control naming
+						string propertyName = JsonNameAttribute.GetJsonName(property);
+						if (String.IsNullOrEmpty(propertyName))
+						{
+							propertyName = property.Name;
+						}
 
-					this.WriteObjectProperty(propertyName, propertyValue);
+						this.WriteObjectProperty(propertyName, propertyValue);
+					}
 				}
 
 				// serialize public fields

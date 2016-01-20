@@ -29,7 +29,9 @@ namespace Meteor.Extensions
 
 			using (JsonWriter writer = new JsonWriter (output, new JsonFx.Json.JsonWriterSettings () {
 				ByteArraySerializer = ByteArraySerializer,
-				DateTimeSerializer = DateSerializer
+				DateTimeSerializer = DateSerializer,
+				SerializeProperties = false,
+				EncodeEnumsAsNumber = true
 			})) {
 				writer.Write (source);
 			}
