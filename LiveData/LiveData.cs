@@ -109,7 +109,7 @@ namespace Meteor
 			WillConnect += HandleWillConnect;
 			CoroutineHost.Instance.StartCoroutine (TimeoutCoroutine (10.0f));
 			Connector = new WebSocket (new Uri (url));
-			connectorInstanceId = Connector.GetHashCode();
+			connectorInstanceId = Connector.GetHashCode ();
 			CoroutineHost.Instance.StartCoroutine (Dispatcher ());
 			yield return Connector.Connect ();
 			SendConnectMessage ();
@@ -261,9 +261,11 @@ namespace Meteor
 				if (Collections.Contains (collection)) {
 					Collections [collection].Added (socketMessage);
 				} else {
+					var addedm = socketMessage.Deserialize<AddedMessage<Hashtable>> ();
 					Debug.Log (string.Format ("LiveData: Unhandled record add. Creating a collection to handle it.\nMessage:\n{0}", socketMessage));
-					var handlingCollection = Meteor.Collection<MongoDocument>.Create (collection) as ICollection;
-					handlingCollection.Added (socketMessage);
+					var handlingCollection = new TemporaryCollection(collection);
+					Collections.Add(handlingCollection);
+					handlingCollection.Added (addedm.id, addedm.fields);
 				}
 				break;
 			case ChangedMessage.changed:
