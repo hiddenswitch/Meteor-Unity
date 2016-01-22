@@ -11,7 +11,7 @@ namespace Meteor
 
 		protected override string GetKeyForItem (Subscription item)
 		{
-			return item.name;
+			return item.requestId;
 		}
 	}
 }

@@ -86,14 +86,14 @@ namespace Meteor
 
 		public void AddedBefore (string id, string before, object record)
 		{
-			this.Add (id, record);
+			this.Added (id, record);
 		}
 
 		public void Added (string addedMessage)
 		{
 			var message = addedMessage.Deserialize<AddedMessage<Hashtable>> ();
 			message.fields ["_id"] = message.id;
-			this.Add (message.id, message.fields);
+			this.Added ((object)message.fields);
 		}
 
 		public void Added (object record)
@@ -108,12 +108,18 @@ namespace Meteor
 				return;
 			}
 
+			if (ContainsKey (_id)) {
+				this.Remove (_id);
+			}
+
 			this.Add (_id, record);
 		}
 
 		public void Added (string id, object record)
 		{
-			this.Add (id, record);
+			var obj = record as IDictionary;
+			obj ["_id"] = id;
+			this.Added ((object)obj);
 		}
 
 		public void Changed (string id, string[] cleared, IDictionary fields)
@@ -273,7 +279,9 @@ namespace Meteor
 				WillAddRecord (r._id, r);
 			}
 
-			Add (r);
+			if (!Contains (r._id)) {
+				Add (r);
+			}
 
 			if (DidAddRecord != null) {
 				DidAddRecord (r._id, r);
@@ -290,7 +298,9 @@ namespace Meteor
 				WillAddRecord (r._id, r);
 			}
 
-			Add (r);
+			if (!Contains (r._id)) {
+				Add (r);
+			}
 
 			if (DidAddRecord != null) {
 				DidAddRecord (r._id, r);

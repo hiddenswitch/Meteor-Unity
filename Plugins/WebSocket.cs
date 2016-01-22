@@ -12,6 +12,9 @@ public class WebSocket
 {
 	private Uri mUrl;
 
+	public event Action<object, WebSocketSharp.ErrorEventArgs> OnError;
+	public event Action<object, WebSocketSharp.CloseEventArgs> OnClosed;
+
 	public WebSocket(Uri url)
 	{
 		mUrl = url;
@@ -107,10 +110,14 @@ public class WebSocket
 
 	public IEnumerator Connect()
 	{
-		m_Socket = new WebSocketSharp.WebSocket(mUrl.ToString());
-		m_Socket.OnMessage += (sender, e) => m_Messages.Enqueue (e.RawData);
-		m_Socket.OnOpen += (sender, e) => m_IsConnected = true;
-		m_Socket.OnError += (sender, e) => m_Error = e.Message;
+		if (m_Socket == null) {
+			m_Socket = new WebSocketSharp.WebSocket(mUrl.ToString());
+			m_Socket.OnMessage += (sender, e) => m_Messages.Enqueue (e.RawData);
+			m_Socket.OnOpen += (sender, e) => m_IsConnected = true;
+			m_Socket.OnClose += (sender, e) => {m_IsConnected = false; if (OnClosed != null) OnClosed(sender, e);};
+			m_Socket.OnError += (sender, e) => {m_Error = e.Message; if (OnError != null) OnError(sender, e);};
+		}
+
 		m_Socket.ConnectAsync();
 		while (!m_IsConnected && m_Error == null)
 			yield return 0;

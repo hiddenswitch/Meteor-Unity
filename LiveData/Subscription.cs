@@ -22,6 +22,8 @@ namespace Meteor
 		public event Action<string> OnReady;
 
 		public string name;
+		public string requestId;
+		public object[] args;
 
 		IEnumerator Wait() {
 			while (!ready) {
