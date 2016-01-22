@@ -31,8 +31,8 @@ namespace Meteor
 		public static bool IsLoggedIn {
 			get {
 				return Error == null &&
-					Response != null &&
-					Response.id != null;
+				Response != null &&
+				Response.id != null;
 			}
 		}
 
@@ -86,6 +86,11 @@ namespace Meteor
 
 		public static Coroutine LoginWithFacebook ()
 		{
+			// Check that we're connected to the server. If we're not, print an error.
+			if (!LiveData.Instance.Connected) {
+				Debug.LogWarning ("Meteor.Accounts: You are not connected to a server. Before you access methods on this service, make sure to connect.");
+			}
+
 			return CoroutineHost.Instance.StartCoroutine (LoginWithFacebookCoroutine ());
 		}
 
@@ -163,6 +168,11 @@ namespace Meteor
 
 		public static Method<LoginUserResult> LoginWithToken ()
 		{
+			// Check that we're connected to the server. If we're not, print an error.
+			if (!LiveData.Instance.Connected) {
+				Debug.LogWarning ("Meteor.Accounts: You are not connected to a server. Before you access methods on this service, make sure to connect.");
+			}
+
 			var loginMethod = LiveData.Instance.Call<LoginUserResult> (LoginUserMethodName, new Meteor.LoginWithTokenOptions () {
 				resume = Token
 			});
@@ -174,10 +184,14 @@ namespace Meteor
 
 		public static Method<LoginUserResult> LoginWith (string username, string password)
 		{
+			// Check that we're connected to the server. If we're not, print an error.
+			if (!LiveData.Instance.Connected) {
+				Debug.LogWarning ("Meteor.Accounts: You are not connected to a server. Before you access methods on this service, make sure to connect.");
+			}
+
 			var loginMethod = LiveData.Instance.Call<LoginUserResult> (LoginUserMethodName, new SecureLoginUserOptions () {
-				password = new PasswordDigest(password),
-				user = new LoginUserUser()
-				{
+				password = new PasswordDigest (password),
+				user = new LoginUserUser () {
 					username = username
 				}
 			});
@@ -240,12 +254,17 @@ namespace Meteor
 
 		public static Coroutine LoginAsGuest ()
 		{
+			// Check that we're connected to the server. If we're not, print an error.
+			if (!LiveData.Instance.Connected) {
+				Debug.LogWarning ("Meteor.Accounts: You are not connected to a server. Before you access methods on this service, make sure to connect.");
+			}
+
 			return CoroutineHost.Instance.StartCoroutine (LoginAsGuestCoroutine ());
 		}
 
 		static IEnumerator LoginAsGuestCoroutine ()
 		{
-			if (!string.IsNullOrEmpty(Token)) {
+			if (!string.IsNullOrEmpty (Token)) {
 				var tokenLogin = LoginWithToken ();
 				// If we can login with token, go for it.
 				yield return (Coroutine)tokenLogin;
@@ -281,7 +300,7 @@ namespace Meteor
 		public static Method<LoginUserResult> CreateAndLoginWith (string email, string username, string password)
 		{
 			var createUserAndLoginMethod = LiveData.Instance.Call<LoginUserResult> (CreateUserMethodName, new  CreateUserOptions () {
-				password = new PasswordDigest(password),
+				password = new PasswordDigest (password),
 				username = username
 			});
 
@@ -296,10 +315,6 @@ namespace Meteor
 				error = 500,
 				reason = "You have not attempted to login yet!"
 			};
-			// Check that we're connected to the server. If we're not, print an error.
-			if (!LiveData.Instance.Connected) {
-				Debug.LogWarning ("Meteor.Accounts: You are not connected to a server. Before you access methods on this service, make sure to connect.");
-			}
 
 			Users = Collection<MongoDocument>.Create ("users");
 		}

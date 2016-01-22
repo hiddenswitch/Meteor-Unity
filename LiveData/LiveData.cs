@@ -19,6 +19,7 @@ namespace Meteor
 
 		Dictionary<string, IMethod> methods;
 		string serverId;
+		string reconnectUrl;
 
 		static LiveData _instance;
 
@@ -48,7 +49,6 @@ namespace Meteor
 		/// </summary>
 		public event Action<string> WillConnect;
 		public event Action<string> DidConnect;
-		public event Action OnReconnected;
 
 		public LiveData ()
 		{
@@ -105,11 +105,18 @@ namespace Meteor
 
 		private IEnumerator ConnectCoroutine (string url)
 		{
+			reconnectUrl = url;
 			TimedOut = false;
 			WillConnect += HandleWillConnect;
 			CoroutineHost.Instance.StartCoroutine (TimeoutCoroutine (10.0f));
+			if (Connector != null) {
+				Connector.OnClosed -= HandleOnClosed;
+				Connector.OnError -= HandleOnError;
+			}
 			Connector = new WebSocket (new Uri (url));
-			connectorInstanceId = Connector.GetHashCode();
+			connectorInstanceId = Connector.GetHashCode ();
+			Connector.OnClosed += HandleOnClosed;
+			Connector.OnError += HandleOnError;
 			CoroutineHost.Instance.StartCoroutine (Dispatcher ());
 			yield return Connector.Connect ();
 			SendConnectMessage ();
@@ -121,7 +128,63 @@ namespace Meteor
 				yield return null;
 			}
 
+			CoroutineHost.Instance.StartCoroutine (ReconnectCheck ());
+
 			yield break;
+		}
+
+		IEnumerator ReconnectCheck ()
+		{
+			if (TimedOut) {
+				yield break;
+			}
+
+			while (Connected) {
+				yield return null;
+			}
+
+			yield return CoroutineHost.Instance.StartCoroutine (Reconnect ());
+		}
+
+		void HandleOnError (object sender, WebSocketSharp.ErrorEventArgs e)
+		{
+			if (e.Message == "An exception has occurred while receiving a message."
+			    && Logging) {
+				Debug.LogWarning ("Meteor hot code push occurred or disconnected.");
+			}
+		}
+
+		void HandleOnClosed (object sender, WebSocketSharp.CloseEventArgs e)
+		{
+			Connected = false;
+		}
+
+		IEnumerator Reconnect ()
+		{
+			// Reconnect
+			yield return new WaitForSeconds (2f);
+			yield return CoroutineHost.Instance.StartCoroutine (ConnectCoroutine (url: reconnectUrl));
+			if (TimedOut) {
+				yield break;
+			}
+
+			// Log back in if we were previously logged in
+			if (!string.IsNullOrEmpty (Accounts.Token)) {
+				yield return (Coroutine)Accounts.LoginWithToken ();
+			}
+
+			// Send all subscriptions again;
+			foreach (var subscription in Subscriptions) {
+				subscription.ready = false;
+				Send (new SubscribeMessage () {
+					name = subscription.name,
+					Params = subscription.args,
+					id = subscription.requestId
+				});
+			}
+			if (Logging) {
+				Debug.Log ("Reconnected");
+			}
 		}
 
 		private IEnumerator Dispatcher ()
@@ -212,7 +275,9 @@ namespace Meteor
 				return Subscriptions [requestId];
 			} else {
 				Subscriptions.Add (new Subscription () {
-					name = requestId
+					requestId = requestId,
+					name = publishName,
+					args = arguments
 				});
 			}
 
@@ -261,9 +326,13 @@ namespace Meteor
 				if (Collections.Contains (collection)) {
 					Collections [collection].Added (socketMessage);
 				} else {
-					Debug.Log (string.Format ("LiveData: Unhandled record add. Creating a collection to handle it.\nMessage:\n{0}", socketMessage));
-					var handlingCollection = Meteor.Collection<MongoDocument>.Create (collection) as ICollection;
-					handlingCollection.Added (socketMessage);
+					var addedm = socketMessage.Deserialize<AddedMessage<Hashtable>> ();
+					if (Logging) {
+						Debug.Log (string.Format ("LiveData: Unhandled record add. Creating a collection to handle it.\nMessage:\n{0}", socketMessage));
+					}
+					var handlingCollection = new TemporaryCollection (collection);
+					Collections.Add (handlingCollection);
+					handlingCollection.Added (addedm.id, addedm.fields);
 				}
 				break;
 			case ChangedMessage.changed:

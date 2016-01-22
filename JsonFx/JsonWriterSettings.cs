@@ -49,6 +49,7 @@ namespace JsonFx.Json
 		#region Fields
 
 		private WriteDelegate<DateTime> dateTimeSerializer;
+		private WriteDelegate<byte[]> byteArraySerializer;
 		private int maxDepth = 25;
 		private string newLine = Environment.NewLine;
 		private bool prettyPrint;
@@ -131,6 +132,20 @@ namespace JsonFx.Json
 		{
 			get { return this.dateTimeSerializer; }
 			set { this.dateTimeSerializer = value; }
+		}
+
+		public virtual WriteDelegate<byte[]> ByteArraySerializer
+		{
+			get { return this.byteArraySerializer; }
+			set { this.byteArraySerializer = value; }
+		}
+
+		public virtual bool SerializeProperties {
+			get; set;
+		}
+
+		public virtual bool EncodeEnumsAsNumber {
+			get; set;
 		}
 
 		#endregion Properties

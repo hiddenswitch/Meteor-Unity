@@ -8,7 +8,7 @@ using Meteor.Extensions;
 
 namespace Meteor
 {
-	public interface ICollection
+	public interface ICollection : System.Collections.ICollection
 	{
 		/// <summary>
 		/// Add a record before another record in order.
@@ -29,6 +29,13 @@ namespace Meteor
 		/// </summary>
 		/// <param name="record">Record.</param>
 		void Added (object record);
+
+		/// <summary>
+		/// Add the record to the collection with the specified ID
+		/// </summary>
+		/// <param name="id">Identifier.</param>
+		/// <param name="record">Record.</param>
+		void Added (string id, object record);
 
 		/// <summary>
 		/// Notify the collection that a record has changed.
@@ -66,7 +73,96 @@ namespace Meteor
 		Type CollectionType { get; }
 	}
 
-	public class Collection<TRecordType> : KeyedCollection<string, TRecordType>, ICollection
+	public class TemporaryCollection : Hashtable, Meteor.ICollection
+	{
+		public TemporaryCollection () : base ()
+		{
+		}
+
+		public TemporaryCollection (string name) : this ()
+		{
+			Name = name;
+		}
+
+		public void AddedBefore (string id, string before, object record)
+		{
+			this.Added (id, record);
+		}
+
+		public void Added (string addedMessage)
+		{
+			var message = addedMessage.Deserialize<AddedMessage<Hashtable>> ();
+			message.fields ["_id"] = message.id;
+			this.Added ((object)message.fields);
+		}
+
+		public void Added (object record)
+		{
+			string _id = null;
+
+			var recordDictionary = record as IDictionary;
+
+			if (recordDictionary != null) {
+				_id = (string)(recordDictionary ["_id"]);
+			} else {
+				return;
+			}
+
+			if (ContainsKey (_id)) {
+				this.Remove (_id);
+			}
+
+			this.Add (_id, record);
+		}
+
+		public void Added (string id, object record)
+		{
+			var obj = record as IDictionary;
+			obj ["_id"] = id;
+			this.Added ((object)obj);
+		}
+
+		public void Changed (string id, string[] cleared, IDictionary fields)
+		{
+			IDictionary existingDoc = null;
+			if (!this.ContainsKey (id)) {
+				this.Add (id, fields);
+				return;
+			}
+			existingDoc = this [id] as IDictionary;
+			if (existingDoc == null) {
+				// Cannot interpret as dictionary
+				return;
+			}
+			var enumerator = fields.GetEnumerator ();
+			while (enumerator.MoveNext ()) {
+				existingDoc [enumerator.Key] = enumerator.Value;
+			}
+		}
+
+		public void MovedBefore (string id, string before)
+		{
+			return;
+		}
+
+		public void Removed (string id)
+		{
+			this.Remove (id);
+		}
+
+		public string Name {
+			get;
+			private set;
+		}
+
+		public Type CollectionType {
+			get {
+				return typeof(IDictionary);
+			}
+		}
+	}
+
+	public class Collection<TRecordType> : KeyedCollection<string, TRecordType>, Meteor.ICollection
 		where TRecordType : MongoDocument, new()
 	{
 		protected Collection () : base ()
@@ -84,7 +180,25 @@ namespace Meteor
 				LiveData.Instance.Collections.Add (new Collection<TRecordType> () { name = name } as ICollection);
 			}
 
-			return LiveData.Instance.Collections [name] as Collection<TRecordType>;
+			var collection = LiveData.Instance.Collections [name] as Collection<TRecordType>;
+
+			// The collection may already exist, but it may be of the wrong type
+			if (collection == null) {
+				// Convert the collection to the requested type
+				var oldCollection = LiveData.Instance.Collections [name];
+				var typedCollection = new Collection<TRecordType> ();
+				typedCollection.name = name;
+				foreach (DictionaryEntry doc in oldCollection) {
+					var value = doc.Value.Coerce<TRecordType> ();
+					value._id = (string)doc.Key;
+					typedCollection.Add (value);
+				}
+
+				LiveData.Instance.Collections.Remove (name);
+				LiveData.Instance.Collections.Add (typedCollection);
+				collection = typedCollection;
+			}
+			return collection;
 		}
 
 		protected override string GetKeyForItem (TRecordType item)
@@ -165,7 +279,28 @@ namespace Meteor
 				WillAddRecord (r._id, r);
 			}
 
-			Add (r);
+			if (!Contains (r._id)) {
+				Add (r);
+			}
+
+			if (DidAddRecord != null) {
+				DidAddRecord (r._id, r);
+			}
+		}
+
+		void ICollection.Added (string id, object record)
+		{
+			var r = record.Coerce<TRecordType> ();
+
+			r._id = id;
+
+			if (WillAddRecord != null) {
+				WillAddRecord (r._id, r);
+			}
+
+			if (!Contains (r._id)) {
+				Add (r);
+			}
 
 			if (DidAddRecord != null) {
 				DidAddRecord (r._id, r);

@@ -6,12 +6,22 @@ namespace Meteor
 {
 	public static class Connection
 	{
+		static Connection ()
+		{
+			LiveData.Instance.DidConnect += delegate(string obj) {
+				if (DidConnect != null) {
+					DidConnect ();
+				}
+			};
+		}
+
 		public static string Url {
 			get;
 			set;
 		}
 
-		public static Coroutine Connect(string url) {
+		public static Coroutine Connect (string url)
+		{
 			Url = url;
 			return LiveData.Instance.Connect (url);
 		}
@@ -31,10 +41,7 @@ namespace Meteor
 			}
 		}
 
-		static IEnumerator ReconnectCoroutine() {
-			// Resubscribe to all subscriptions
-			yield break;
-		}
+		public static event Action DidConnect;
 	}
 }
 
