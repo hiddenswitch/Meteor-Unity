@@ -167,6 +167,12 @@ namespace Meteor
 			if (TimedOut) {
 				yield break;
 			}
+
+			// Log back in if we were previously logged in
+			if (!string.IsNullOrEmpty (Accounts.Token)) {
+				yield return (Coroutine)Accounts.LoginWithToken ();
+			}
+
 			// Send all subscriptions again;
 			foreach (var subscription in Subscriptions) {
 				subscription.ready = false;

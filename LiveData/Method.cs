@@ -7,27 +7,31 @@ namespace Meteor
 {
 	public class Method : IMethod
 	{
-		public Method() {
+		public Method ()
+		{
 			Updated = false;
 		}
 
 		public MethodMessage Message;
+
 		public event MethodHandler OnUntypedResponse;
+
 		public string Name {
-			get; protected set;
+			get;
+			protected set;
 		}
 
-		public static Method Call(string name, params object[] args) {
+		public static Method Call (string name, params object[] args)
+		{
 			var methodCall = LiveData.Instance.Call (name, args);
 			methodCall.Name = name;
 			return methodCall;
 		}
 
-		public virtual void Callback(Error error, object response)
+		public virtual void Callback (Error error, object response)
 		{
-			if (OnUntypedResponse != null)
-			{
-				OnUntypedResponse(error, response);
+			if (OnUntypedResponse != null) {
+				OnUntypedResponse (error, response);
 			}
 		}
 
@@ -58,13 +62,26 @@ namespace Meteor
 
 		protected bool complete;
 
-		protected void completed(Error error, object response) {
+		protected void completed (Error error, object response)
+		{
 			UntypedResponse = response;
 			Error = error;
 			complete = true;
 		}
 
-		protected virtual IEnumerator Execute() {
+		protected virtual IEnumerator Execute ()
+		{
+			// Send the method message over the wire.
+			while (!Connection.Connected
+				&& !LiveData.Instance.TimedOut) {
+				yield return null;
+			}
+
+			if (LiveData.Instance.TimedOut) {
+				Callback (new Error () { error = -1, details = "Connection timed out." }, null);
+				yield break;
+			}
+
 			// Send the method message over the wire.
 			LiveData.Instance.Send (Message);
 
@@ -79,12 +96,14 @@ namespace Meteor
 			yield break;
 		}
 
-		public virtual Coroutine ExecuteAsync(MethodHandler callback=null) {
+		public virtual Coroutine ExecuteAsync (MethodHandler callback = null)
+		{
 			this.OnUntypedResponse += callback;
 			return (Coroutine)this;
 		}
 
-		public static implicit operator Coroutine(Method method) {
+		public static implicit operator Coroutine (Method method)
+		{
 			if (method == null) {
 				return null;
 			}
@@ -92,16 +111,21 @@ namespace Meteor
 			return CoroutineHost.Instance.StartCoroutine (method.Execute ());
 		}
 
-		protected sealed class MethodHost : MonoSingleton<MethodHost> {}
+		protected sealed class MethodHost : MonoSingleton<MethodHost>
+		{
+
+		}
 	}
 
 	public class Method<TResponseType> : Method
 	{
-		public Method() {
+		public Method ()
+		{
 			Updated = false;
 		}
 
-		public static new Method<TResponseType> Call(string name, params object[] args) {
+		public static new Method<TResponseType> Call (string name, params object[] args)
+		{
 			var methodCall = LiveData.Instance.Call<TResponseType> (name, args);
 			methodCall.Name = name;
 			return methodCall;
@@ -109,8 +133,7 @@ namespace Meteor
 
 		public event MethodHandler<TResponseType> OnResponse;
 
-		public TResponseType Response
-		{
+		public TResponseType Response {
 			get {
 				return UntypedResponse == null ? default(TResponseType) : (TResponseType)UntypedResponse;
 			}
@@ -121,26 +144,25 @@ namespace Meteor
 
 		#region IMethod implementation
 
-		public override void Callback(Error error, object response)
+		public override void Callback (Error error, object response)
 		{
 			TResponseType r = default(TResponseType);
 			try {
 				if (response != null) {
-					r = response.Coerce<TResponseType>();
+					r = response.Coerce<TResponseType> ();
 				} else if (response == null
-					&& typeof(TResponseType).IsValueType
-					&& error == null) {
-					Debug.LogError(string.Format("Returned null when a value type was expected and no error was found.\nMethod: {0}", this));
+				           && typeof(TResponseType).IsValueType
+				           && error == null) {
+					Debug.LogError (string.Format ("Returned null when a value type was expected and no error was found.\nMethod: {0}", this));
 				}
 			} catch (JsonFx.Json.JsonTypeCoercionException ex) {
 				if (error == null) {
-					Debug.LogWarning(string.Format("Failed to convert method response type to specified type in call and no error was found.\nMethod: {0}", this));
+					Debug.LogWarning (string.Format ("Failed to convert method response type to specified type in call and no error was found.\nMethod: {0}", this));
 				}
 			}
 
-			if (OnResponse != null)
-			{
-				OnResponse(error, r);
+			if (OnResponse != null) {
+				OnResponse (error, r);
 			} else {
 				base.Callback (error, response);
 			}
@@ -152,14 +174,26 @@ namespace Meteor
 			}
 		}
 
-		protected void typedCompleted(Error error, TResponseType response) {
+		protected void typedCompleted (Error error, TResponseType response)
+		{
 			Response = response;
 			Error = error;
 			complete = true;
 		}
 
-		protected override IEnumerator Execute() {
+		protected override IEnumerator Execute ()
+		{
 			// Send the method message over the wire.
+			while (!Connection.Connected
+			       && !LiveData.Instance.TimedOut) {
+				yield return null;
+			}
+
+			if (LiveData.Instance.TimedOut) {
+				Callback (new Error () { error = -1, details = "Connection timed out." }, null);
+				yield break;
+			}
+
 			LiveData.Instance.Send (Message);
 
 			// Wait until we get a response.
@@ -173,12 +207,14 @@ namespace Meteor
 			yield break;
 		}
 
-		public virtual Coroutine ExecuteAsync(MethodHandler<TResponseType> callback=null) {
+		public virtual Coroutine ExecuteAsync (MethodHandler<TResponseType> callback = null)
+		{
 			this.OnResponse += callback;
 			return (Coroutine)this;
 		}
 
-		public static implicit operator Coroutine(Method<TResponseType> method) {
+		public static implicit operator Coroutine (Method<TResponseType> method)
+		{
 			if (method == null) {
 				return null;
 			}
@@ -190,6 +226,7 @@ namespace Meteor
 		{
 			return string.Format ("[Method: Name={0}, Response={1}, ResponseType={2}]", Name, Response, ResponseType.Name);
 		}
+
 		#endregion
 	}
 }
