@@ -26,11 +26,13 @@
 	THE SOFTWARE.
 
 \*---------------------------------------------------------------------------------*/
+
 #endregion License
 
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using System.ComponentModel;
 using System.Globalization;
 using System.Reflection;
@@ -127,23 +129,33 @@ namespace JsonFx.Json
 
 		internal Object InstantiateObject(Type objectType, out Dictionary<string, MemberInfo> memberMap)
 		{
-			if (objectType.IsInterface || objectType.IsAbstract || objectType.IsValueType)
+			if (objectType.IsInterface || objectType.IsAbstract)
 			{
 				throw new JsonTypeCoercionException(
 					String.Format(TypeCoercionUtility.ErrorCannotInstantiate, objectType.FullName));
 			}
 
 			ConstructorInfo ctor = objectType.GetConstructor(Type.EmptyTypes);
+			Object result = null;
+
 			if (ctor == null)
 			{
-				throw new JsonTypeCoercionException(
-					String.Format(TypeCoercionUtility.ErrorDefaultCtor, objectType.FullName));
+				if (objectType.IsValueType) {
+					try {
+						result = FormatterServices.GetUninitializedObject(objectType);
+					} catch {
+						throw new JsonTypeCoercionException(
+							String.Format(TypeCoercionUtility.ErrorCannotInstantiate, objectType.FullName));
+					}
+				} else {
+					throw new JsonTypeCoercionException(
+						String.Format(TypeCoercionUtility.ErrorDefaultCtor, objectType.FullName));
+				}
 			}
-			Object result;
 			try
 			{
 				// always try-catch Invoke() to expose real exception
-				result = ctor.Invoke(null);
+				result = result ?? ctor.Invoke(null);
 			}
 			catch (TargetInvocationException ex)
 			{
@@ -710,10 +722,12 @@ namespace JsonFx.Json
 			try {
 				enumerator = (IEnumerator)method.Invoke (enumerable, null);
 				return enumerator;
+			#pragma warning disable 0168
 			} catch (Exception e) {
 				// TODO: Define what to do in the case of an exception here.
 				return null;
 			}
+			#pragma warning restore 0168
 		}
 	}
 }

@@ -69,12 +69,12 @@ A Unity SDK for Meteor. Supports Unity3D 5.0.0 and higher!
   		yield return (Coroutine)Meteor.Accounts.LoginAsGuest ();
   
   		// Create a collection
-  		var collection = Meteor.Collection<DocumentType>.Create ("collectionName");
+  		var collection = new Meteor.Collection<DocumentType> ("collectionName");
   
   		// Add some handlers with the new observer syntax
-  		var observer = new Meteor.Observe<DocumentType>(collection, added: (string id, DocumentType document) => {
+  		var observer = collection.Find ().Observe (added: (string id, DocumentType document) => {
   			Debug.Log(string.Format("Document added:\n{0}", document.Serialize()));
-  		};
+  		});
   
   		// Subscribe
   		var subscription = Meteor.Subscription.Subscribe ("subscriptionEndpointName", /*arguments*/ 1, 3, 4);
