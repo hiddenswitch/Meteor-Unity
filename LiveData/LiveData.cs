@@ -8,7 +8,7 @@ using WebSocketSharp.Net.WebSockets;
 
 namespace Meteor
 {
-	public class LiveData : ILiveData
+	internal class LiveData : ILiveData
 	{
 		WebSocket Connector;
 		int uniqueId;
