@@ -121,13 +121,41 @@ namespace Meteor
 				throw new ArgumentException (string.Format ("A collection with name {0} already exists", name));
 			}
 
-
 			Collection<TRecordType>.Create (name, instance: this);
 		}
 
 		public Cursor<TRecordType> Find (Func<TRecordType, bool> selector = null)
 		{
 			return new Cursor<TRecordType> (collection: this, selector: selector);
+		}
+
+		public Cursor<TRecordType> Find (string id)
+		{
+			return new Cursor<TRecordType> (collection: this, id: id);
+		}
+
+		public Cursor<TRecordType> Find (IEnumerable<string> ids)
+		{
+			return new Cursor<TRecordType> (collection: this, ids: ids);
+		}
+
+		public TRecordType FindOne (string id)
+		{
+			return this [id];
+		}
+
+		public TRecordType FindOne (Func<TRecordType, bool> selector = null)
+		{
+			selector = selector ?? delegate(TRecordType arg) {
+				return true;
+			};
+
+			foreach (var record in this) {
+				if (selector (record)) {
+					return record;
+				}
+			}
+			return null;
 		}
 
 		public static Collection<TRecordType> Create (string name)

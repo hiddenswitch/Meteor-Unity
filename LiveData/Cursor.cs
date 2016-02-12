@@ -11,6 +11,7 @@ namespace Meteor
 	public class Cursor<TRecordType>
 		where TRecordType : MongoDocument, new()
 	{
+
 		public Collection<TRecordType> collection {
 			get;
 			protected set;
@@ -21,10 +22,27 @@ namespace Meteor
 			protected set;
 		}
 
+		public IEnumerable<string> ids {
+			get;
+			protected set;
+		}
+
 		public Cursor (Collection<TRecordType> collection, Func<TRecordType, bool> selector = null)
 		{
 			this.collection = collection;
 			this.selector = selector ?? SelectAll;
+		}
+
+		public Cursor (Collection<TRecordType> collection, string id)
+		{
+			this.collection = collection;
+			this.ids = new string[] { id };
+		}
+
+		public Cursor (Collection<TRecordType> collection, IEnumerable<string> ids)
+		{
+			this.collection = collection;
+			this.ids = ids;
 		}
 
 		public Observe<TRecordType> Observe (Action<string,TRecordType> added = null, Action<string,TRecordType,IDictionary,string[]> changed = null, Action<string> removed = null)
@@ -34,10 +52,17 @@ namespace Meteor
 
 		public IEnumerable<TRecordType> Fetch ()
 		{
-			foreach (var record in collection) {
-				if (selector (record)) {
-					yield return record;
+			if (ids == null) {
+				foreach (var record in collection) {
+					if (selector (record)) {
+						yield return record;
+					}
 				}
+				yield break;
+			}
+
+			foreach (var id in ids) {
+				yield return collection [id];
 			}
 
 			yield break;
