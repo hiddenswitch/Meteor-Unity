@@ -71,8 +71,8 @@ A Unity SDK for Meteor. Supports Unity3D 5.0.0 and higher!
   		// Create a collection
   		var collection = Meteor.Collection<DocumentType>.Create ("collectionName");
   
-  		// Add some handlers
-  		collection.DidAddRecord += (string id, DocumentType document) => {
+  		// Add some handlers with the new observer syntax
+  		var observer = new Meteor.Observe<DocumentType>(collection, added: (string id, DocumentType document) => {
   			Debug.Log(string.Format("Document added:\n{0}", document.Serialize()));
   		};
   
