@@ -155,11 +155,13 @@ namespace Meteor
 				           && error == null) {
 					Debug.LogError (string.Format ("Returned null when a value type was expected and no error was found.\nMethod: {0}", this));
 				}
+			#pragma warning disable 0168
 			} catch (JsonFx.Json.JsonTypeCoercionException ex) {
 				if (error == null) {
 					Debug.LogWarning (string.Format ("Failed to convert method response type to specified type in call and no error was found.\nMethod: {0}", this));
 				}
 			}
+			#pragma warning restore 0168
 
 			if (OnResponse != null) {
 				OnResponse (error, r);

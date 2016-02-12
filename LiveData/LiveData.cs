@@ -401,7 +401,7 @@ namespace Meteor
 				var pongMessage = new PongMessage () {
 					id = pingMessage.id
 				};
-				Send (pingMessage);
+				Send (pongMessage);
 				break;
 			case PongMessage.pong:
 				break;

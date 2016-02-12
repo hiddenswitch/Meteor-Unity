@@ -710,10 +710,12 @@ namespace JsonFx.Json
 			try {
 				enumerator = (IEnumerator)method.Invoke (enumerable, null);
 				return enumerator;
+			#pragma warning disable 0168
 			} catch (Exception e) {
 				// TODO: Define what to do in the case of an exception here.
 				return null;
 			}
+			#pragma warning restore 0168
 		}
 	}
 }

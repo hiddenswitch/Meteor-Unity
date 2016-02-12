@@ -8,71 +8,6 @@ using Meteor.Extensions;
 
 namespace Meteor
 {
-	public interface ICollection : System.Collections.ICollection
-	{
-		/// <summary>
-		/// Add a record before another record in order.
-		/// </summary>
-		/// <param name="id">Record ID.</param>
-		/// <param name="before">The ID of the record to insert before.</param>
-		/// <param name="record">The record.</param>
-		void AddedBefore (string id, string before, object record);
-
-		/// <summary>
-		/// Add the serialized message to the collection.
-		/// </summary>
-		/// <param name="addedMessage">Added message.</param>
-		void Added (string addedMessage);
-
-		/// <summary>
-		/// Add the record to the collection.
-		/// </summary>
-		/// <param name="record">Record.</param>
-		void Added (object record);
-
-		/// <summary>
-		/// Add the record to the collection with the specified ID
-		/// </summary>
-		/// <param name="id">Identifier.</param>
-		/// <param name="record">Record.</param>
-		void Added (string id, object record);
-
-		/// <summary>
-		/// Notify the collection that a record has changed.
-		/// </summary>
-		/// <param name="id">Record ID.</param>
-		/// <param name="cleared">Fields that are now undefined.</param>
-		/// <param name="fields">New values for fields of record.</param>
-		void Changed (string id, string[] cleared, IDictionary fields);
-
-		/// <summary>
-		/// Move a record before another record.
-		/// </summary>
-		/// <param name="id">ID of record.</param>
-		/// <param name="before">ID of record to move before.</param>
-		void MovedBefore (string id, string before);
-
-		/// <summary>
-		/// Remove a record.
-		/// </summary>
-		/// <param name="id">Identifier.</param>
-		void Removed (string id);
-
-		/// <summary>
-		/// Collection name.
-		/// </summary>
-		/// <value>The name.</value>
-		string Name {
-			get;
-		}
-
-		/// <summary>
-		/// Record type.
-		/// </summary>
-		/// <value>The type of the collection.</value>
-		Type CollectionType { get; }
-	}
-
 	public class TemporaryCollection : Hashtable, Meteor.ICollection
 	{
 		public TemporaryCollection () : base ()
@@ -169,15 +104,48 @@ namespace Meteor
 		{
 		}
 
+		/// <summary>
+		/// Creates a new Mongo-style collection.
+		/// Throws an exception if a collection with the given name already exists. If you want a way to get an
+		/// existing collection instance if it already exists, use Collection&lt;TRecordType&gt;.Create(name)
+		/// </summary>
+		/// <param name="name">Name. If null, returns a local-only collection.</param>
+		public Collection (string name) : base ()
+		{
+			var doesCollectionAlreadyExist = LiveData.Instance.Collections.Contains (name);
+			var isNameEmpty = string.IsNullOrEmpty (name);
+			var isCollectionTemporary = LiveData.Instance.Collections [name] as TemporaryCollection != null;
+			if (!isNameEmpty
+			    && doesCollectionAlreadyExist
+			    && !isCollectionTemporary) {
+				throw new ArgumentException (string.Format ("A collection with name {0} already exists", name));
+			}
+
+
+			Collection<TRecordType>.Create (name, instance: this);
+		}
+
+		public Cursor<TRecordType> Find (Func<TRecordType, bool> selector = null)
+		{
+			return new Cursor<TRecordType> (collection: this, selector: selector);
+		}
+
 		public static Collection<TRecordType> Create (string name)
 		{
+			return Create (name, new Collection<TRecordType> ());
+		}
+
+		protected static Collection<TRecordType> Create (string name, Collection<TRecordType> instance)
+		{
+			instance = instance ?? new Collection<TRecordType> ();
 			if (string.IsNullOrEmpty (name)) {
-				return new Collection<TRecordType> ();
+				return instance;
 			}
 
 			// Check if we already have this collection defined, otherwise make it
 			if (!LiveData.Instance.Collections.Contains (name)) {
-				LiveData.Instance.Collections.Add (new Collection<TRecordType> () { name = name } as ICollection);
+				instance.name = name;
+				LiveData.Instance.Collections.Add (instance as ICollection);
 			}
 
 			var collection = LiveData.Instance.Collections [name] as Collection<TRecordType>;
@@ -185,20 +153,26 @@ namespace Meteor
 			// The collection may already exist, but it may be of the wrong type
 			if (collection == null) {
 				// Convert the collection to the requested type
-				var oldCollection = LiveData.Instance.Collections [name];
-				var typedCollection = new Collection<TRecordType> ();
-				typedCollection.name = name;
-				foreach (DictionaryEntry doc in oldCollection) {
-					var value = doc.Value.Coerce<TRecordType> ();
-					value._id = (string)doc.Key;
-					typedCollection.Add (value);
-				}
-
-				LiveData.Instance.Collections.Remove (name);
-				LiveData.Instance.Collections.Add (typedCollection);
-				collection = typedCollection;
+				collection = Convert (name, instance);
 			}
+
 			return collection;
+		}
+
+		protected static Collection<TRecordType> Convert (string name, Collection<TRecordType> instance)
+		{
+			var oldCollection = LiveData.Instance.Collections [name];
+			var typedCollection = instance ?? new Collection<TRecordType> ();
+			typedCollection.name = name;
+			foreach (DictionaryEntry doc in oldCollection) {
+				var value = doc.Value.Coerce<TRecordType> ();
+				value._id = (string)doc.Key;
+				typedCollection.Add (value);
+			}
+
+			LiveData.Instance.Collections.Remove (name);
+			LiveData.Instance.Collections.Add (typedCollection);
+			return typedCollection;
 		}
 
 		protected override string GetKeyForItem (TRecordType item)
