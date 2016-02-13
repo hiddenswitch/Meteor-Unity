@@ -114,7 +114,7 @@ namespace Meteor
 		{
 			var doesCollectionAlreadyExist = LiveData.Instance.Collections.Contains (name);
 			var isNameEmpty = string.IsNullOrEmpty (name);
-			var isCollectionTemporary = LiveData.Instance.Collections [name] as TemporaryCollection != null;
+			var isCollectionTemporary = doesCollectionAlreadyExist && LiveData.Instance.Collections [name] as TemporaryCollection != null;
 			if (!isNameEmpty
 			    && doesCollectionAlreadyExist
 			    && !isCollectionTemporary) {
