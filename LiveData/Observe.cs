@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace Meteor
 {
@@ -45,16 +46,21 @@ namespace Meteor
 			protected set;
 		}
 
+		public ICollection<String> Fields {
+			get;
+			protected set;
+		}
+
 		protected string idToRemove;
 
-		public Observe (Collection<TRecordType> collection, Action<string,TRecordType> added = null, Action<string,TRecordType,IDictionary,string[]> changed = null, Action<string> removed = null, Func<TRecordType, bool> selector = null)
+		public Observe (Collection<TRecordType> collection, Action<string,TRecordType> added = null, Action<string,TRecordType,IDictionary,string[]> changed = null, Action<string> removed = null, Func<TRecordType, bool> selector = null, IEnumerable<string> fields = null)
 		{
 			this.Collection = collection;
 
-			if (selector == null) {
-				RecordSelector = SelectAll;
-			} else {
-				RecordSelector = selector;
+			RecordSelector = selector ?? SelectAll;
+
+			if (fields != null) {
+				Fields = new HashSet<string> (fields);
 			}
 
 			Initializing = true;
@@ -103,7 +109,18 @@ namespace Meteor
 
 		void Collection_DidChangeRecord (string arg1, TRecordType arg2, IDictionary arg3, string[] arg4)
 		{
-			if (RecordSelector (arg2)
+			// Are any of the fields part of this change?
+			var fieldsInterested = true;
+			if (Fields != null) {
+				fieldsInterested = false;
+				foreach (var field in arg4) {
+					if (Fields.Contains (field)) {
+						fieldsInterested = true;
+					}
+				}
+			}
+			if (fieldsInterested
+			    && RecordSelector (arg2)
 			    && Changed != null) {
 				Changed (arg1, arg2, arg3, arg4);
 			}
@@ -124,13 +141,20 @@ namespace Meteor
 
 		public void Stop ()
 		{
-			Collection.DidAddRecord -= Collection_DidAddRecord;
-			Collection.DidChangeRecord -= Collection_DidChangeRecord;
-			Collection.WillRemoveRecord -= Collection_WillRemoveRecord;
-			Collection.DidRemoveRecord -= Collection_DidRemoveRecord;
+			if (Collection != null) {
+				Collection.DidAddRecord -= Collection_DidAddRecord;
+				Collection.DidChangeRecord -= Collection_DidChangeRecord;
+				Collection.WillRemoveRecord -= Collection_WillRemoveRecord;
+				Collection.DidRemoveRecord -= Collection_DidRemoveRecord;
+			}
 		}
 
 		#region IDisposable implementation
+
+		~Observe ()
+		{
+			Dispose ();
+		}
 
 		public void Dispose ()
 		{

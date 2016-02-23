@@ -45,9 +45,9 @@ namespace Meteor
 			this.ids = ids;
 		}
 
-		public Observe<TRecordType> Observe (Action<string,TRecordType> added = null, Action<string,TRecordType,IDictionary,string[]> changed = null, Action<string> removed = null)
+		public Observe<TRecordType> Observe (Action<string,TRecordType> added = null, Action<string,TRecordType,IDictionary,string[]> changed = null, Action<string> removed = null, IEnumerable<string> fields = null)
 		{
-			return new Observe<TRecordType> (collection: this.collection, added: added, changed: changed, removed: removed, selector: selector);
+			return new Observe<TRecordType> (collection: this.collection, added: added, changed: changed, removed: removed, selector: selector, fields: fields);
 		}
 
 		public IEnumerable<TRecordType> Fetch ()
