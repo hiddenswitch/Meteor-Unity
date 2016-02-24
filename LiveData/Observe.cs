@@ -46,10 +46,7 @@ namespace Meteor
 			protected set;
 		}
 
-		public ICollection<String> Fields {
-			get;
-			protected set;
-		}
+		protected HashSet<String> Fields;
 
 		protected string idToRemove;
 
@@ -107,22 +104,15 @@ namespace Meteor
 			idToRemove = null;
 		}
 
-		void Collection_DidChangeRecord (string arg1, TRecordType arg2, IDictionary arg3, string[] arg4)
+		void Collection_DidChangeRecord (string id, TRecordType record, IDictionary fields, string[] cleared)
 		{
 			// Are any of the fields part of this change?
 			var fieldsInterested = true;
-			if (Fields != null) {
-				fieldsInterested = false;
-				foreach (var field in arg4) {
-					if (Fields.Contains (field)) {
-						fieldsInterested = true;
-					}
-				}
-			}
+
 			if (fieldsInterested
-			    && RecordSelector (arg2)
+			    && RecordSelector (record)
 			    && Changed != null) {
-				Changed (arg1, arg2, arg3, arg4);
+				Changed (id, record, fields, cleared);
 			}
 		}
 
