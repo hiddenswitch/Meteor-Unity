@@ -6,7 +6,7 @@ using System.Reflection;
 using JsonFx.Json;
 using Meteor.Extensions;
 
-namespace Meteor
+namespace Meteor.Internal
 {
 	public interface ICollection : System.Collections.ICollection
 	{
@@ -65,12 +65,6 @@ namespace Meteor
 		string Name {
 			get;
 		}
-
-		/// <summary>
-		/// Record type.
-		/// </summary>
-		/// <value>The type of the collection.</value>
-		Type CollectionType { get; }
 	}
 	
 }

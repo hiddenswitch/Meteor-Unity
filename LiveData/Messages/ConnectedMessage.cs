@@ -1,8 +1,8 @@
 using Meteor.Extensions;
 
-namespace Meteor
+namespace Meteor.Internal
 {
-	public class ConnectedMessage : Message
+	internal class ConnectedMessage : Message
 	{
 		public const string connected = "connected";
 		public string session;

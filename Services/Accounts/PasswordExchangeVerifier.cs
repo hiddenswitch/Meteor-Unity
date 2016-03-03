@@ -1,4 +1,4 @@
-namespace Meteor
+namespace Meteor.Internal
 {
 
 	public class PasswordExchangeVerifier

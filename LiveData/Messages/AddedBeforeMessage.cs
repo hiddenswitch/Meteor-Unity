@@ -1,8 +1,8 @@
 using System;
 
-namespace Meteor
+namespace Meteor.Internal
 {
-	public class AddedBeforeMessage<RecordType> : CollectionMessage
+	internal class AddedBeforeMessage<RecordType> : CollectionMessage
 		where RecordType : new()
 	{
 		const string adddedBefore = "adddedBefore";

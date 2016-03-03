@@ -5,99 +5,15 @@ using System.Collections.ObjectModel;
 using System.Reflection;
 using JsonFx.Json;
 using Meteor.Extensions;
+using Meteor.Internal;
 
 namespace Meteor
 {
-	public class TemporaryCollection : Hashtable, Meteor.ICollection
-	{
-		public TemporaryCollection () : base ()
-		{
-		}
-
-		public TemporaryCollection (string name) : this ()
-		{
-			Name = name;
-		}
-
-		public void AddedBefore (string id, string before, object record)
-		{
-			this.Added (id, record);
-		}
-
-		public void Added (string addedMessage)
-		{
-			var message = addedMessage.Deserialize<AddedMessage<Hashtable>> ();
-			message.fields ["_id"] = message.id;
-			this.Added ((object)message.fields);
-		}
-
-		public void Added (object record)
-		{
-			string _id = null;
-
-			var recordDictionary = record as IDictionary;
-
-			if (recordDictionary != null) {
-				_id = (string)(recordDictionary ["_id"]);
-			} else {
-				return;
-			}
-
-			if (ContainsKey (_id)) {
-				this.Remove (_id);
-			}
-
-			this.Add (_id, record);
-		}
-
-		public void Added (string id, object record)
-		{
-			var obj = record as IDictionary;
-			obj ["_id"] = id;
-			this.Added ((object)obj);
-		}
-
-		public void Changed (string id, string[] cleared, IDictionary fields)
-		{
-			IDictionary existingDoc = null;
-			if (!this.ContainsKey (id)) {
-				this.Add (id, fields);
-				return;
-			}
-			existingDoc = this [id] as IDictionary;
-			if (existingDoc == null) {
-				// Cannot interpret as dictionary
-				return;
-			}
-			var enumerator = fields.GetEnumerator ();
-			while (enumerator.MoveNext ()) {
-				existingDoc [enumerator.Key] = enumerator.Value;
-			}
-		}
-
-		public void MovedBefore (string id, string before)
-		{
-			return;
-		}
-
-		public void Removed (string id)
-		{
-			this.Remove (id);
-		}
-
-		public string Name {
-			get;
-			private set;
-		}
-
-		public Type CollectionType {
-			get {
-				return typeof(IDictionary);
-			}
-		}
-	}
-
-	public class Collection<TRecordType> : KeyedCollection<string, TRecordType>, Meteor.ICollection
+	/// <summary>
+	/// A Mongo collection corresponding to your <code>new Mongo.Collection</code> statements in Meteor.
+	/// Calling this function is analogous to declaring a model in a traditional ORM (Object-Relation Mapper)-centric framework. It sets up a collection (a storage space for records, or "documents") that can be used to store a particular type of information, like users, posts, scores, todo items, or whatever matters to your application. Each document is a EJSON object. It includes an _id property whose value is unique in the collection, which Meteor will set when you first create the document.
+	/// </summary>
+	public class Collection<TRecordType> : KeyedCollection<string, TRecordType>, Meteor.Internal.ICollection
 		where TRecordType : MongoDocument, new()
 	{
 		protected Collection () : base ()
@@ -109,7 +25,7 @@ namespace Meteor
 		/// Throws an exception if a collection with the given name already exists. If you want a way to get an
 		/// existing collection instance if it already exists, use Collection&lt;TRecordType&gt;.Create(name)
 		/// </summary>
-		/// <param name="name">Name. If null, returns a local-only collection.</param>
+		/// <param name="name">Name corresponding to your Meteor code's new Mongo.Collection(name) statement. If null, returns a local-only collection.</param>
 		public Collection (string name) : base ()
 		{
 			var doesCollectionAlreadyExist = LiveData.Instance.Collections.Contains (name);
@@ -124,26 +40,52 @@ namespace Meteor
 			Collection<TRecordType>.Create (name, instance: this);
 		}
 
+		/// <summary>
+		/// Finds documents that match the specified selector.
+		/// </summary>
+		/// <param name="selector">Selector. For example, record =&gt; record.type == 1 returns all documents whose "type" field
+		/// matches "1". This is a standard function that should return true when the document matches. </param>
 		public Cursor<TRecordType> Find (Func<TRecordType, bool> selector = null)
 		{
 			return new Cursor<TRecordType> (collection: this, selector: selector);
 		}
 
+		/// <summary>
+		/// Returns a cursor matching the single ID. Useful for a subsequent observe.
+		/// </summary>
+		/// <param name="id">Document ID.</param>
 		public Cursor<TRecordType> Find (string id)
 		{
 			return new Cursor<TRecordType> (collection: this, id: id);
 		}
 
+		/// <summary>
+		/// Returns a cursor matching an array of document IDs.
+		/// </summary>
+		/// <param name="ids">Document IDs.</param>
 		public Cursor<TRecordType> Find (IEnumerable<string> ids)
 		{
 			return new Cursor<TRecordType> (collection: this, ids: ids);
 		}
 
+		/// <summary>
+		/// Finds and returns a single document matching the ID.
+		/// </summary>
+		/// <returns>A matching document. Throws an exception if none is found.</returns>
+		/// <exception cref="System.Collections.Generic.KeyNotFoundException">Throws if the specified document does not exist. </exception>
+		/// <param name="id">The document ID.</param>
 		public TRecordType FindOne (string id)
 		{
+			
 			return this [id];
 		}
 
+		/// <summary>
+		/// Finds documents matching the selector and returns the first one matching the selector, in arbitrary order. Throws an exception if none is found.
+		/// </summary>
+		/// <returns>A matching document.</returns>
+		/// <exception cref="System.Collections.Generic.KeyNotFoundException">Throws if the specified document does not exist. </exception>
+		/// <param name="selector">Selector.</param>
 		public TRecordType FindOne (Func<TRecordType, bool> selector = null)
 		{
 			selector = selector ?? delegate(TRecordType arg) {
@@ -158,6 +100,11 @@ namespace Meteor
 			return null;
 		}
 
+		/// <summary>
+		/// Creates a collection for the specified name. You can call this multiple times and it will return the same instance of a collection if it was
+		/// already declared somewhere else.
+		/// </summary>
+		/// <param name="name">The name of the collection corresponding to your Meteor code's new Mongo.Collection(name) statement.</param>
 		public static Collection<TRecordType> Create (string name)
 		{
 			return Create (name, new Collection<TRecordType> ());
@@ -173,7 +120,7 @@ namespace Meteor
 			// Check if we already have this collection defined, otherwise make it
 			if (!LiveData.Instance.Collections.Contains (name)) {
 				instance.name = name;
-				LiveData.Instance.Collections.Add (instance as ICollection);
+				LiveData.Instance.Collections.Add (instance as Meteor.Internal.ICollection);
 			}
 
 			var collection = LiveData.Instance.Collections [name] as Collection<TRecordType>;
@@ -208,18 +155,10 @@ namespace Meteor
 			return item._id;
 		}
 
+		/// <summary>
+		/// The collection name corresponding to your Meteor code's new Mongo.Collection(name) statement
+		/// </summary>
 		public string name;
-
-		public bool ready {
-			get;
-			private set;
-		}
-
-		public Type CollectionType {
-			get {
-				return typeof(TRecordType);
-			}
-		}
 
 		TypeCoercionUtility typeCoercionUtility = new TypeCoercionUtility ();
 
@@ -250,7 +189,7 @@ namespace Meteor
 
 		#region ICollection implementation
 
-		void ICollection.AddedBefore (string id, string before, object record)
+		void Meteor.Internal.ICollection.AddedBefore (string id, string before, object record)
 		{
 			TRecordType r = record.Coerce<TRecordType> ();
 
@@ -265,15 +204,15 @@ namespace Meteor
 			}
 		}
 
-		void ICollection.Added (string messageText)
+		void Meteor.Internal.ICollection.Added (string messageText)
 		{
 			var message = messageText.Deserialize<AddedMessage<TRecordType>> ();
 			var r = message.fields;
 			r._id = message.id;
-			((ICollection)this).Added (r);
+			((Meteor.Internal.ICollection)this).Added (r);
 		}
 
-		void ICollection.Added (object record)
+		void Meteor.Internal.ICollection.Added (object record)
 		{
 			var r = record.Coerce<TRecordType> ();
 
@@ -290,7 +229,7 @@ namespace Meteor
 			}
 		}
 
-		void ICollection.Added (string id, object record)
+		void Meteor.Internal.ICollection.Added (string id, object record)
 		{
 			var r = record.Coerce<TRecordType> ();
 
@@ -309,7 +248,7 @@ namespace Meteor
 			}
 		}
 
-		void ICollection.Changed (string id, string[] cleared, IDictionary fields)
+		void Meteor.Internal.ICollection.Changed (string id, string[] cleared, IDictionary fields)
 		{
 			// Allow this to throw an exception.
 			TRecordType record = this [id];
@@ -340,14 +279,14 @@ namespace Meteor
 			}
 		}
 
-		void ICollection.MovedBefore (string id, string before)
+		void Meteor.Internal.ICollection.MovedBefore (string id, string before)
 		{
 			var record = this [id];
 			Remove (id);
 			Insert (IndexOf (this [before]), record);
 		}
 
-		void ICollection.Removed (string id)
+		void Meteor.Internal.ICollection.Removed (string id)
 		{
 			if (WillRemoveRecord != null) {
 				WillRemoveRecord (id);
@@ -360,13 +299,37 @@ namespace Meteor
 			}
 		}
 
-		string ICollection.Name {
+		string Meteor.Internal.ICollection.Name {
 			get {
 				return name;
 			}
 		}
 
 		#endregion
+
+		/// <summary>
+		/// Inserts a record. Currently not supported. This is a client only representation of the collection. In order to insert documents, define
+		/// a method on the server that performs the insert, and call that method. The features of the <code>insecure</code> package, like client-side inserts,
+		/// are not supported.
+		/// </summary>
+		/// <param name="record">Record.</param>
+		public void Insert (TRecordType record)
+		{
+			throw new NotSupportedException ();
+		}
+
+		/// <summary>
+		/// Updates a record. Currently not supported. This is a client only representation of the collection. In order to update documents, define
+		/// a method on the server that performs the update, and call that method. The features of the <code>insecure</code> package, like client-side updates,
+		/// are not supported.
+		/// </summary>
+		/// <param name="id">Identifier.</param>
+		/// <param name="mongoUpdateCommand">Mongo update command.</param>
+		/// <param name="mongoUpdateOptions">Mongo update options.</param>
+		public void Update (string id, IDictionary mongoUpdateCommand, IDictionary mongoUpdateOptions)
+		{
+			throw new NotSupportedException ();
+		}
 	}
 }
 

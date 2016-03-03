@@ -1,7 +1,7 @@
 using System;
-namespace Meteor
+namespace Meteor.Internal
 {
-	public class AddedMessage<TRecordType> : CollectionMessage
+	internal class AddedMessage<TRecordType> : CollectionMessage
 	{
 		[JsonFx.Json.JsonIgnore]
 		public const string added = "added";

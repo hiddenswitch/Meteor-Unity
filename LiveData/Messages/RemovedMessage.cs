@@ -1,7 +1,7 @@
 using System;
-namespace Meteor
+namespace Meteor.Internal
 {
-	public class RemovedMessage : CollectionMessage
+	internal class RemovedMessage : CollectionMessage
 	{
 		public const string removed = "removed";
 

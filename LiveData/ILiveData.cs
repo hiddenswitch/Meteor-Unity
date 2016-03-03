@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-namespace Meteor
+namespace Meteor.Internal
 {
-    public interface ILiveData
+    internal interface ILiveData
     {
         Coroutine Connect(string url);
 		Method Call (string methodName, params object[] arguments);

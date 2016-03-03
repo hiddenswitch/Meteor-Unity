@@ -1,8 +1,8 @@
 using System.Collections;
 
-namespace Meteor
+namespace Meteor.Internal
 {
-	public class UpdatedMessage : Message
+	internal class UpdatedMessage : Message
 	{
 		[JsonFx.Json.JsonIgnore]
 		public const string updated = "updated";

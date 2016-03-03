@@ -6,7 +6,7 @@ using UnityEngine;
 using Meteor.Extensions;
 using WebSocketSharp.Net.WebSockets;
 
-namespace Meteor
+namespace Meteor.Internal
 {
 	internal class LiveData : ILiveData
 	{

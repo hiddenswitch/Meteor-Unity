@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Meteor
+namespace Meteor.Internal
 {
-    public interface IDataSubscriber
+    internal interface IDataSubscriber
     {
         void DataReceived(IDictionary<string,object> data);
     }

@@ -1,6 +1,6 @@
-namespace Meteor
+namespace Meteor.Internal
 {
-	public class MethodMessage : Message
+	internal class MethodMessage : Message
 	{
 		const string _method = "method";
 

@@ -1,6 +1,6 @@
-namespace Meteor
+namespace Meteor.Internal
 {
-	public class UnsubscribeMessage : Message
+	internal class UnsubscribeMessage : Message
 	{
 		const string unsub = "unsub";
 

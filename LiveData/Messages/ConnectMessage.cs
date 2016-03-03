@@ -1,8 +1,8 @@
 using Meteor.Extensions;
 
-namespace Meteor
+namespace Meteor.Internal
 {
-	public class ConnectMessage : Message
+	internal class ConnectMessage : Message
 	{
 		const string connect = "connect";
 		const string versionConst = "pre2";

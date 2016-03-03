@@ -1,7 +1,7 @@
 using System;
-namespace Meteor
+namespace Meteor.Internal
 {
-	public class Message
+	internal class Message
 	{
 		public string msg;
 		public Message () {}

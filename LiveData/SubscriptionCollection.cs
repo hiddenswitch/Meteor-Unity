@@ -1,9 +1,9 @@
 using System;
 using System.Collections.ObjectModel;
 
-namespace Meteor
+namespace Meteor.Internal
 {
-	public class SubscriptionCollection : KeyedCollection<string, Subscription>
+	internal class SubscriptionCollection : KeyedCollection<string, Subscription>
 	{
 		public SubscriptionCollection ()
 		{

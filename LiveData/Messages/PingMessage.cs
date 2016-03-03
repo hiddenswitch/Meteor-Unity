@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace Meteor
+namespace Meteor.Internal
 {
-	public class PingMessage : Message
+	internal class PingMessage : Message
 	{
 		public const string ping = "ping";
 		public string id;

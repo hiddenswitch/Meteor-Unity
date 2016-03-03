@@ -1,7 +1,7 @@
 using System.Collections;
-namespace Meteor
+namespace Meteor.Internal
 {
-	public class ChangedMessage : CollectionMessage
+	internal class ChangedMessage : CollectionMessage
 	{
 		public const string changed = "changed";
 		public string id = null;

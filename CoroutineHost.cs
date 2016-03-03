@@ -1,21 +1,26 @@
-
 using System;
 
-public class CoroutineHost : MonoSingleton<CoroutineHost>
+namespace Meteor.Internal
 {
-	public CoroutineHost ()
+	/// <summary>
+	/// An object used to host the internal coroutines for running the Meteor services.
+	/// </summary>
+	public class CoroutineHost : MonoSingleton<CoroutineHost>
 	{
-	}
-
-	protected override void OnApplicationQuit ()
-	{
-		base.OnApplicationQuit ();
-		try {
-			Meteor.LiveData.Instance.Close ();
-		#pragma warning disable 0168
-		} catch (Exception e) {
+		public CoroutineHost ()
+		{
 		}
-		#pragma warning restore 0168
-	}
-}
 
+		protected override void OnApplicationQuit ()
+		{
+			base.OnApplicationQuit ();
+			try {
+				Meteor.Internal.LiveData.Instance.Close ();
+				#pragma warning disable 0168
+			} catch (Exception e) {
+			}
+			#pragma warning restore 0168
+		}
+	}
+
+}

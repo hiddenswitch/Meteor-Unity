@@ -1,6 +1,6 @@
-namespace Meteor
+namespace Meteor.Internal
 {
-	public class ReadyMessage : Message
+	internal class ReadyMessage : Message
 	{
 		public const string ready = "ready";
 

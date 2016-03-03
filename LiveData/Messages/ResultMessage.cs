@@ -1,8 +1,8 @@
 using System.Collections;
 
-namespace Meteor
+namespace Meteor.Internal
 {
-	public class ResultMessage : Message
+	internal class ResultMessage : Message
 	{
 		[JsonFx.Json.JsonIgnore]
 		public const string result = "result";

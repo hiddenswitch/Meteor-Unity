@@ -1,6 +1,6 @@
-namespace Meteor
+namespace Meteor.Internal
 {
-	public class MovedBeforeMessage : CollectionMessage
+	internal class MovedBeforeMessage : CollectionMessage
 	{
 		const string movedBefore = "movedBefore";
 		public string id = null;

@@ -1,8 +1,8 @@
 ﻿using Meteor.Extensions;
 
-namespace Meteor
+namespace Meteor.Internal
 {
-	public class FailedMessage : Message
+	internal class FailedMessage : Message
 	{
 		public const string failed = "failed";
 		public string version;

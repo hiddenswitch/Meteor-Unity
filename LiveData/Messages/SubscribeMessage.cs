@@ -1,6 +1,6 @@
-namespace Meteor
+namespace Meteor.Internal
 {
-	public class SubscribeMessage : Message
+	internal class SubscribeMessage : Message
 	{
 		public string name;
 		[JsonFx.Json.JsonName("params")]

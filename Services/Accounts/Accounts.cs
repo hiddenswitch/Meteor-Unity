@@ -3,12 +3,22 @@ using System.Collections;
 using UnityEngine;
 using Meteor;
 using Meteor.Extensions;
+using Meteor.Internal;
 
 namespace Meteor
 {
+	/// <summary>
+	/// Contains all the methods used to create and manage user accounts.
+	/// </summary>
 	public static class Accounts
 	{
+		/// <summary>
+		/// The email domain used for guest accounts.
+		/// </summary>
 		public static string GuestEmailDomain = "example.com";
+		/// <summary>
+		/// The permissions requested by a Facebook login.
+		/// </summary>
 		public static string FacebookScope = "email";
 		const string TokenKey = "Meteor.Accounts.Token";
 		const string IdKey = "Meteor.Accounts.Id";
@@ -18,16 +28,31 @@ namespace Meteor
 		const string CreateUserMethodName = "createUser";
 		const string LoginUserMethodName = "login";
 		const string BeginPasswordExchangeMethodName = "beginPasswordExchange";
-		static LoginUserResult _response;
+		static LoginResult _response;
 
-		public static event Action<Error, LoginUserResult> LoginMethodWillComplete;
-		public static event Action<Error, LoginUserResult> LoginMethodDidComplete;
+		/// <summary>
+		/// This event is raised when the login method is about to complete.
+		/// </summary>
+		public static event Action<Error, LoginResult> LoginMethodWillComplete;
+		/// <summary>
+		/// This event is raised when the login method did complete.
+		/// </summary>
+		public static event Action<Error, LoginResult> LoginMethodDidComplete;
 
-		public static Collection<MongoDocument> Users {
-			get;
-			private set;
+		/// <summary>
+		/// The users collection.
+		/// </summary>
+		/// <value>The users.</value>
+		public static Meteor.Internal.ICollection Users {
+			get {
+				return LiveData.Instance.Collections ["users"];
+			}
 		}
 
+		/// <summary>
+		/// Is the user currently logged in?
+		/// </summary>
+		/// <value><c>true</c> if is logged in; otherwise, <c>false</c>.</value>
 		public static bool IsLoggedIn {
 			get {
 				return Error == null &&
@@ -36,9 +61,17 @@ namespace Meteor
 			}
 		}
 
+		/// <summary>
+		/// The error if a login was attempted.
+		/// </summary>
+		/// <value>The error.</value>
 		public static Error Error { get; private set; }
 
-		public static LoginUserResult Response {
+		/// <summary>
+		/// The result of logging in.
+		/// </summary>
+		/// <value>The response.</value>
+		public static LoginResult Response {
 			get {
 				return _response;
 			}
@@ -51,6 +84,10 @@ namespace Meteor
 			}
 		}
 
+		/// <summary>
+		/// The User's ID.
+		/// </summary>
+		/// <value>The user identifier.</value>
 		public static string UserId {
 			get {
 				if (Response != null) {
@@ -67,6 +104,11 @@ namespace Meteor
 			}
 		}
 
+		/// <summary>
+		/// The Meteor login token. Generally you will not use this directly unless you need to save it in a different service. Accounts automatically saves tokens from
+		/// successful login attempts for you.
+		/// </summary>
+		/// <value>The token.</value>
 		public static string Token {
 			get {
 				if (Response != null) {
@@ -84,6 +126,10 @@ namespace Meteor
 			}
 		}
 
+		/// <summary>
+		/// Logs in with Facebook. Requires the Facebook SDK and the compile preprocessor symbol FACEBOOK defined.
+		/// </summary>
+		/// <returns>The with facebook.</returns>
 		public static Coroutine LoginWithFacebook ()
 		{
 			// Check that we're connected to the server. If we're not, print an error.
@@ -151,7 +197,7 @@ namespace Meteor
 			yield return (Coroutine)loginMethod;
 
 			#else
-			UnityEngine.Debug.LogError ("Facebook login is not enabled with a build setting, or you're missing the Facebook SDK.");
+			UnityEngine.Debug.LogError ("Facebook login is not enabled with a build setting, or you're missing the Facebook SDK. Set the FACEBOOK compile preprocessor define symbol.");
 			Error = new Error () {
 				error = 500,
 				reason = "Facebook login is not enabled with a build setting, or you're missing the Facebook SDK."
@@ -161,19 +207,27 @@ namespace Meteor
 			yield break;
 		}
 
+		/// <summary>
+		/// Logs in with a Google account. Currently not supported.
+		/// </summary>
+		/// <returns>A Coroutine used to execute the login.</returns>
 		public static Coroutine LoginWithGoogle ()
 		{
 			throw new NotImplementedException ();
 		}
 
-		public static Method<LoginUserResult> LoginWithToken ()
+		/// <summary>
+		/// Log in with a saved token.
+		/// </summary>
+		/// <returns>A method. See the method document to correctly execute methods. <see cref="Meteor.Method`1"/></returns>
+		public static Method<LoginResult> LoginWithToken ()
 		{
 			// Check that we're connected to the server. If we're not, print an error.
 			if (!LiveData.Instance.Connected) {
 				Debug.LogWarning ("Meteor.Accounts: You are not connected to a server. Before you access methods on this service, make sure to connect.");
 			}
 
-			var loginMethod = LiveData.Instance.Call<LoginUserResult> (LoginUserMethodName, new Meteor.LoginWithTokenOptions () {
+			var loginMethod = LiveData.Instance.Call<LoginResult> (LoginUserMethodName, new Meteor.Internal.LoginWithTokenOptions () {
 				resume = Token
 			});
 
@@ -182,14 +236,20 @@ namespace Meteor
 			return loginMethod;
 		}
 
-		public static Method<LoginUserResult> LoginWith (string username, string password)
+		/// <summary>
+		/// Log in with a specified username and password. See the method documentation for correctly executing methods. <see cref="Meteor.Method`1"/>.
+		/// </summary>
+		/// <returns>A method instance. This can be cast to a coroutine you can execute in an IEnumerator/Coroutine. <see cref="Meteor.Method`1"/>.</returns>
+		/// <param name="username">Username.</param>
+		/// <param name="password">Password.</param>
+		public static Method<LoginResult> LoginWith (string username, string password)
 		{
 			// Check that we're connected to the server. If we're not, print an error.
 			if (!LiveData.Instance.Connected) {
 				Debug.LogWarning ("Meteor.Accounts: You are not connected to a server. Before you access methods on this service, make sure to connect.");
 			}
 
-			var loginMethod = LiveData.Instance.Call<LoginUserResult> (LoginUserMethodName, new SecureLoginUserOptions () {
+			var loginMethod = LiveData.Instance.Call<LoginResult> (LoginUserMethodName, new SecureLoginUserOptions () {
 				password = new PasswordDigest (password),
 				user = new LoginUserUser () {
 					username = username
@@ -201,7 +261,7 @@ namespace Meteor
 			return loginMethod;
 		}
 
-		static void HandleOnLogin (Error error, LoginUserResult response)
+		static void HandleOnLogin (Error error, LoginResult response)
 		{
 			if (LoginMethodWillComplete != null) {
 				LoginMethodWillComplete (error, response);
@@ -252,6 +312,13 @@ namespace Meteor
 			#endif
 		}
 
+		/// <summary>
+		/// Login as a guest. Use inside an IEnumerator/Coroutine.
+		/// </summary>
+		/// <example>
+		/// yield return Meteor.Accounts.LoginAsGuest();
+		/// </example>
+		/// <returns>The as guest.</returns>
 		public static Coroutine LoginAsGuest ()
 		{
 			// Check that we're connected to the server. If we're not, print an error.
@@ -297,9 +364,18 @@ namespace Meteor
 			yield return (Coroutine)Accounts.CreateAndLoginWith (guestEmail, guestUsername, guestPassword);
 		}
 
-		public static Method<LoginUserResult> CreateAndLoginWith (string email, string username, string password)
+		/// <summary>
+		/// Creates a user.
+		/// This function logs in as the newly created user on successful completion.
+		/// You must pass password and at least one of username or email — enough information for the user to be able to log in again later. If there are existing users with a username or email only differing in case, createUser will fail.
+		/// </summary>
+		/// <returns>The and login with.</returns>
+		/// <param name="email">Email. Currently unsupported.</param>
+		/// <param name="username">Username.</param>
+		/// <param name="password">Password.</param>
+		public static Method<LoginResult> CreateAndLoginWith (string email, string username, string password)
 		{
-			var createUserAndLoginMethod = LiveData.Instance.Call<LoginUserResult> (CreateUserMethodName, new  CreateUserOptions () {
+			var createUserAndLoginMethod = LiveData.Instance.Call<LoginResult> (CreateUserMethodName, new  CreateUserOptions () {
 				password = new PasswordDigest (password),
 				username = username
 			});
@@ -315,8 +391,6 @@ namespace Meteor
 				error = 500,
 				reason = "You have not attempted to login yet!"
 			};
-
-			Users = Collection<MongoDocument>.Create ("users");
 		}
 	}
 }

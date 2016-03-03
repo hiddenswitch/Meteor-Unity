@@ -1,6 +1,6 @@
 using System;
 
-namespace Meteor
+namespace Meteor.Internal
 {
 	public class LoginWithTokenOptions
 	{
