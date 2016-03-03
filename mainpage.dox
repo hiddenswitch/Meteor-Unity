@@ -1,0 +1,10 @@
+/**
+@brief Official Meteor-Unity documentation.
+@author Benjamin Berman
+@file
+*/
+/** @defgroup Meteor-Unity Sources */
+/**
+@mainpage Meteor-Unity documentation.
+Start by visiting the class list above!
+*/
