@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['gethashcode',['GetHashCode',['../class_meteor_1_1_error.html#aea4f2d5d00dc12196054da85f96c5e1e',1,'Meteor::Error']]]
+  ['insert',['Insert',['../class_meteor_1_1_collection.html#ab032136a38b88c4a18f931c04d3e7899',1,'Meteor::Collection']]]
 ];

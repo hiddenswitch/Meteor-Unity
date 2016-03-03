@@ -1,9 +1,9 @@
 var searchData=
 [
-  ['observe',['Observe',['../class_meteor_1_1_observe.html',1,'Meteor']]],
-  ['observe',['Observe',['../class_meteor_1_1_cursor.html#aff5157912838ee8c064801cac4cdd4f8',1,'Meteor.Cursor.Observe()'],['../class_meteor_1_1_observe.html#a1fdf4924d1c195c381403a02c76e2121',1,'Meteor.Observe.Observe()']]],
-  ['onresponse',['OnResponse',['../class_meteor_1_1_method.html#a39aaad4b5032ef4986af67200fa48885',1,'Meteor::Method']]],
-  ['operator_20coroutine',['operator Coroutine',['../class_meteor_1_1_method.html#a0b2d0a69cd5bcee43a69b4ecc0ff0423',1,'Meteor.Method.operator Coroutine(Method method)'],['../class_meteor_1_1_method.html#a6b1a56bc3cbd70a3214fe422e7296800',1,'Meteor.Method.operator Coroutine(Method&lt; TResponseType &gt; method)']]],
-  ['operator_21_3d',['operator!=',['../class_meteor_1_1_error.html#a27ffc35ccb53e8beac1a113d00c50220',1,'Meteor::Error']]],
-  ['operator_3d_3d',['operator==',['../class_meteor_1_1_error.html#a165a8e0a31d0fc20e96371489a02ed50',1,'Meteor::Error']]]
+  ['ready',['ready',['../class_meteor_1_1_subscription.html#a476ca753b577c2cbc7dde67f49110cb1',1,'Meteor::Subscription']]],
+  ['reason',['reason',['../class_meteor_1_1_error.html#acf6d8cc22402e3a4ee530d85a5bf6241',1,'Meteor::Error']]],
+  ['removed',['Removed',['../class_meteor_1_1_observe.html#ae6cd4226af9c5b72c8e86bd0c9b2a15e',1,'Meteor::Observe']]],
+  ['requestid',['requestId',['../class_meteor_1_1_subscription.html#a10eed57b0445afedeaea2389ae7b0225',1,'Meteor::Subscription']]],
+  ['response',['Response',['../class_meteor_1_1_method.html#a742d1a687db83077c79085ab49d08468',1,'Meteor.Method.Response()'],['../class_meteor_1_1_accounts.html#ae72ace2c8b3080380b4e58977ac5ed5a',1,'Meteor.Accounts.Response()']]],
+  ['responsetype',['ResponseType',['../class_meteor_1_1_method.html#a7f0b861b05cc0b646aaca68a6e8c4488',1,'Meteor.Method.ResponseType()'],['../class_meteor_1_1_method.html#a05f5ef5a1570018997a44646ede6402b',1,'Meteor.Method.ResponseType()']]]
 ];

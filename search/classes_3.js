@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['error',['Error',['../class_meteor_1_1_error.html',1,'Meteor']]]
+  ['loginresult',['LoginResult',['../class_meteor_1_1_login_result.html',1,'Meteor']]]
 ];

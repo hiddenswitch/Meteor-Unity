@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['movedbefore',['MovedBefore',['../interface_meteor_1_1_internal_1_1_i_collection.html#a0025dd4b1caaf1d3eeeb734467f40f01',1,'Meteor.Internal.ICollection.MovedBefore()'],['../class_meteor_1_1_internal_1_1_temporary_collection.html#ad9cfbe743245f5457fdeb5fd2b1518d7',1,'Meteor.Internal.TemporaryCollection.MovedBefore()']]]
+  ['stop',['Stop',['../class_meteor_1_1_observe.html#a956ed2285fc474b4fdbe1104eea2853a',1,'Meteor::Observe']]],
+  ['subscribe',['Subscribe',['../class_meteor_1_1_subscription.html#a09c7769d0482d600fa8c5e6b71bcb55f',1,'Meteor::Subscription']]]
 ];

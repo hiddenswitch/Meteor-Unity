@@ -1,5 +1,7 @@
 var searchData=
 [
-  ['temporarycollection',['TemporaryCollection',['../class_meteor_1_1_internal_1_1_temporary_collection.html',1,'Meteor::Internal']]],
-  ['token',['Token',['../class_meteor_1_1_accounts.html#a095c48ec3dcbbe3c1fbb42b8c134c52f',1,'Meteor.Accounts.Token()'],['../class_meteor_1_1_login_result.html#a683f74a3869dcac9b6edff64d7565088',1,'Meteor.LoginResult.token()']]]
+  ['when',['when',['../class_meteor_1_1_login_result.html#a66f220fa8fe725c41893ebd00ceef269',1,'Meteor::LoginResult']]],
+  ['willaddrecord',['WillAddRecord',['../class_meteor_1_1_collection.html#adb6710b49f0029c63f70fa494b43438a',1,'Meteor::Collection']]],
+  ['willchangerecord',['WillChangeRecord',['../class_meteor_1_1_collection.html#a510c24283c280d034d3ef6bee805fbe8',1,'Meteor::Collection']]],
+  ['willremoverecord',['WillRemoveRecord',['../class_meteor_1_1_collection.html#aa50e61277156fbd20dde4b8aa3ff7c50',1,'Meteor::Collection']]]
 ];

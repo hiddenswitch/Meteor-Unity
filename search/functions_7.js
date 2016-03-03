@@ -1,8 +1,7 @@
 var searchData=
 [
-  ['loginasguest',['LoginAsGuest',['../class_meteor_1_1_accounts.html#a63d44f6374ca52de2dc10e4e7f443638',1,'Meteor::Accounts']]],
-  ['loginwith',['LoginWith',['../class_meteor_1_1_accounts.html#ad9940673bf208fe26f1d61b8479ce79a',1,'Meteor::Accounts']]],
-  ['loginwithfacebook',['LoginWithFacebook',['../class_meteor_1_1_accounts.html#a6c897d39e45e429b5d25fe7f0625017d',1,'Meteor::Accounts']]],
-  ['loginwithgoogle',['LoginWithGoogle',['../class_meteor_1_1_accounts.html#ac039b9292b8fba77ebd8be4069fa9215',1,'Meteor::Accounts']]],
-  ['loginwithtoken',['LoginWithToken',['../class_meteor_1_1_accounts.html#a67dbdca8a1ab4d157c5e3bac5a9a0bd9',1,'Meteor::Accounts']]]
+  ['observe',['Observe',['../class_meteor_1_1_cursor.html#aff5157912838ee8c064801cac4cdd4f8',1,'Meteor.Cursor.Observe()'],['../class_meteor_1_1_observe.html#a1fdf4924d1c195c381403a02c76e2121',1,'Meteor.Observe.Observe()']]],
+  ['operator_20coroutine',['operator Coroutine',['../class_meteor_1_1_method.html#a0b2d0a69cd5bcee43a69b4ecc0ff0423',1,'Meteor.Method.operator Coroutine(Method method)'],['../class_meteor_1_1_method.html#a6b1a56bc3cbd70a3214fe422e7296800',1,'Meteor.Method.operator Coroutine(Method&lt; TResponseType &gt; method)']]],
+  ['operator_21_3d',['operator!=',['../class_meteor_1_1_error.html#a27ffc35ccb53e8beac1a113d00c50220',1,'Meteor::Error']]],
+  ['operator_3d_3d',['operator==',['../class_meteor_1_1_error.html#a165a8e0a31d0fc20e96371489a02ed50',1,'Meteor::Error']]]
 ];
