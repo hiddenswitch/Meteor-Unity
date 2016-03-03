@@ -5,6 +5,8 @@ A Unity SDK for Meteor. Supports Unity3D 5.0.0 and higher!
 
 ##### Getting started
 
+  0. Check out the documentation at http://hiddenswitch.github.io/Meteor-Unity/annotated.html.
+
   1. Install `meteor` and `git`
  
     ```sh
