@@ -143,7 +143,7 @@ namespace Meteor.Internal
 				yield return null;
 			}
 
-			yield return CoroutineHost.Instance.StartCoroutine (Reconnect ());
+			yield return CoroutineHost.Instance.StartCoroutine (ReconnectCoroutine ());
 		}
 
 		void HandleOnError (object sender, WebSocketSharp.ErrorEventArgs e)
@@ -151,6 +151,7 @@ namespace Meteor.Internal
 			if (e.Message == "An exception has occurred while receiving a message."
 			    && Logging) {
 				Debug.LogWarning ("Meteor hot code push occurred or disconnected.");
+				Connected = false;
 			}
 		}
 
@@ -159,7 +160,13 @@ namespace Meteor.Internal
 			Connected = false;
 		}
 
-		IEnumerator Reconnect ()
+
+		public Coroutine Reconnect ()
+		{
+			return CoroutineHost.Instance.StartCoroutine (ReconnectCoroutine ());
+		}
+
+		IEnumerator ReconnectCoroutine ()
 		{
 			// Reconnect
 			yield return new WaitForSeconds (2f);

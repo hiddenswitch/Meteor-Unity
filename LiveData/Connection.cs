@@ -73,6 +73,14 @@ namespace Meteor
 		}
 
 		/// <summary>
+		/// Reconnect to the server. This is useful to call in an OnApplicationPause(bool pause) when pause is false (resuming)
+		/// </summary>
+		public static Coroutine Reconnect ()
+		{
+			return LiveData.Instance.Reconnect ();
+		}
+
+		/// <summary>
 		/// Should logging of all messages be enabled for this connection?
 		/// </summary>
 		/// <value><c>true</c> if logging; otherwise, <c>false</c>.</value>
