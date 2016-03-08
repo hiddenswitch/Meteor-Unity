@@ -1,7 +1,16 @@
 Meteor-Unity
 ============
 
-A Unity SDK for Meteor. Supports Unity3D 5.0.0 and higher! Only supports Mono2x backends on iOS and Android.
+A Unity SDK for Meteor. Supports Unity3D 5.3.2 and higher. See the [Documentation](http://hiddenswitch.github.io/Meteor-Unity/annotated.html).
+
+Current version: v2.2. This is regarded as the first fully stable and operational release for desktop and mobile platforms. WebGL is not supported. On iOS and Android, only the Mono2x backend is supported.
+
+See the example code at the bottom of the Readme for an overview of all the supported features. Wherever possible, the API matches the Meteor API, and the details match Meteor details. There are a few exceptions:
+
+ - In Meteor, disconnecting and reconnecting triggers a removal of all records and adding of all new records, as though a subscription was torn down and recreated. In Meteor-Unity, disconnecting does not result in removing records, while reconnecting will result in add messages / added called in observe handles.
+ - Dates are not supported in data subscriptions in Meteor-Unity. Dates are supported in method call arguments.
+
+Compared to Meteor, Meteor-Unity has some limitations. It cannot simluate code yet, so database side effects must come from the server. It cannot handle documents that aren't explicitly typed.
 
 ##### Getting started
 
