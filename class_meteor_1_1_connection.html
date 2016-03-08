@@ -108,6 +108,9 @@ Static Public Member Functions</h2></td></tr>
 <tr class="memitem:ab2ef3e9f48c15c84a2c9a3eb8bbcaf74"><td class="memItemLeft" align="right" valign="top">static Coroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_meteor_1_1_connection.html#ab2ef3e9f48c15c84a2c9a3eb8bbcaf74">Connect</a> (string url)</td></tr>
 <tr class="memdesc:ab2ef3e9f48c15c84a2c9a3eb8bbcaf74"><td class="mdescLeft">&#160;</td><td class="mdescRight">Connects to the specified URL. Note, <a class="el" href="namespace_meteor.html">Meteor</a> hosted sites do NOT support  <a href="#ab2ef3e9f48c15c84a2c9a3eb8bbcaf74">More...</a><br /></td></tr>
 <tr class="separator:ab2ef3e9f48c15c84a2c9a3eb8bbcaf74"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6a251add92a04019166d51636e6537a9"><td class="memItemLeft" align="right" valign="top">static Coroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_meteor_1_1_connection.html#a6a251add92a04019166d51636e6537a9">Reconnect</a> ()</td></tr>
+<tr class="memdesc:a6a251add92a04019166d51636e6537a9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reconnect to the server. This is useful to call in an OnApplicationPause(bool pause) when pause is false (resuming)  <a href="#a6a251add92a04019166d51636e6537a9">More...</a><br /></td></tr>
+<tr class="separator:a6a251add92a04019166d51636e6537a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="properties"></a>
 Properties</h2></td></tr>
@@ -160,6 +163,31 @@ Events</h2></td></tr>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a class="anchor" id="a6a251add92a04019166d51636e6537a9"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static Coroutine Meteor.Connection.Reconnect </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Reconnect to the server. This is useful to call in an OnApplicationPause(bool pause) when pause is false (resuming) </p>
 
 </div>
 </div>

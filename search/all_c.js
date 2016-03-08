@@ -2,6 +2,7 @@ var searchData=
 [
   ['ready',['ready',['../class_meteor_1_1_subscription.html#a476ca753b577c2cbc7dde67f49110cb1',1,'Meteor::Subscription']]],
   ['reason',['reason',['../class_meteor_1_1_error.html#acf6d8cc22402e3a4ee530d85a5bf6241',1,'Meteor::Error']]],
+  ['reconnect',['Reconnect',['../class_meteor_1_1_connection.html#a6a251add92a04019166d51636e6537a9',1,'Meteor::Connection']]],
   ['removed',['Removed',['../class_meteor_1_1_observe.html#ae6cd4226af9c5b72c8e86bd0c9b2a15e',1,'Meteor::Observe']]],
   ['requestid',['requestId',['../class_meteor_1_1_subscription.html#a10eed57b0445afedeaea2389ae7b0225',1,'Meteor::Subscription']]],
   ['response',['Response',['../class_meteor_1_1_method.html#a742d1a687db83077c79085ab49d08468',1,'Meteor.Method.Response()'],['../class_meteor_1_1_accounts.html#ae72ace2c8b3080380b4e58977ac5ed5a',1,'Meteor.Accounts.Response()']]],
