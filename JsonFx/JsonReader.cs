@@ -455,8 +455,7 @@ namespace JsonFx.Json
 				{
 					throw new JsonDeserializationException(JsonReader.ErrorUnterminatedObject, this.index);
 				}
-
-				// parse object member value
+			
 				object value = this.Read(memberType, false);
 
 				if (result is IDictionary)

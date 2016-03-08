@@ -61,14 +61,11 @@ namespace JsonFx.Json
 
 		#region Properties
 
-		private Dictionary<Type, Dictionary<string, MemberInfo>> MemberMapCache
-		{
-			get
-			{
-				if (this.memberMapCache == null)
-				{
+		private Dictionary<Type, Dictionary<string, MemberInfo>> MemberMapCache {
+			get {
+				if (this.memberMapCache == null) {
 					// instantiate space for cache
-					this.memberMapCache = new Dictionary<Type, Dictionary<string, MemberInfo>>();
+					this.memberMapCache = new Dictionary<Type, Dictionary<string, MemberInfo>> ();
 				}
 				return this.memberMapCache;
 			}
@@ -83,8 +80,7 @@ namespace JsonFx.Json
 		/// Setting this to false, throws an exception if null is
 		/// specified for a ValueType member.
 		/// </remarks>
-		public bool AllowNullValueTypes
-		{
+		public bool AllowNullValueTypes {
 			get { return this.allowNullValueTypes; }
 			set { this.allowNullValueTypes = value; }
 		}
@@ -102,167 +98,139 @@ namespace JsonFx.Json
 		/// <param name="objectType">reference to the objectType</param>
 		/// <param name="memberMap">reference to the memberMap</param>
 		/// <returns></returns>
-		internal object ProcessTypeHint(
+		internal object ProcessTypeHint (
 			IDictionary result,
 			string typeInfo,
 			out Type objectType,
 			out Dictionary<string, MemberInfo> memberMap)
 		{
-			if (String.IsNullOrEmpty(typeInfo))
-			{
+			if (String.IsNullOrEmpty (typeInfo)) {
 				objectType = null;
 				memberMap = null;
 				return result;
 			}
 
-			Type hintedType = Type.GetType(typeInfo, false);
-			if (hintedType == null)
-			{
+			Type hintedType = Type.GetType (typeInfo, false);
+			if (hintedType == null) {
 				objectType = null;
 				memberMap = null;
 				return result;
 			}
 
 			objectType = hintedType;
-			return this.CoerceType(hintedType, result, out memberMap);
+			return this.CoerceType (hintedType, result, out memberMap);
 		}
 
-		internal Object InstantiateObject(Type objectType, out Dictionary<string, MemberInfo> memberMap)
+		internal Object InstantiateObject (Type objectType, out Dictionary<string, MemberInfo> memberMap)
 		{
-			if (objectType.IsInterface || objectType.IsAbstract)
-			{
-				throw new JsonTypeCoercionException(
-					String.Format(TypeCoercionUtility.ErrorCannotInstantiate, objectType.FullName));
+			if (objectType.IsInterface || objectType.IsAbstract) {
+				throw new JsonTypeCoercionException (
+					String.Format (TypeCoercionUtility.ErrorCannotInstantiate, objectType.FullName));
 			}
 
-			ConstructorInfo ctor = objectType.GetConstructor(Type.EmptyTypes);
+			ConstructorInfo ctor = objectType.GetConstructor (Type.EmptyTypes);
 			Object result = null;
 
-			if (ctor == null)
-			{
+			if (ctor == null) {
 				if (objectType.IsValueType) {
 					try {
-						result = FormatterServices.GetUninitializedObject(objectType);
+						result = FormatterServices.GetUninitializedObject (objectType);
 					} catch {
-						throw new JsonTypeCoercionException(
-							String.Format(TypeCoercionUtility.ErrorCannotInstantiate, objectType.FullName));
+						throw new JsonTypeCoercionException (
+							String.Format (TypeCoercionUtility.ErrorCannotInstantiate, objectType.FullName));
 					}
 				} else {
-					throw new JsonTypeCoercionException(
-						String.Format(TypeCoercionUtility.ErrorDefaultCtor, objectType.FullName));
+					throw new JsonTypeCoercionException (
+						String.Format (TypeCoercionUtility.ErrorDefaultCtor, objectType.FullName));
 				}
 			}
-			try
-			{
+			try {
 				// always try-catch Invoke() to expose real exception
-				result = result ?? ctor.Invoke(null);
-			}
-			catch (TargetInvocationException ex)
-			{
-				if (ex.InnerException != null)
-				{
-					throw new JsonTypeCoercionException(ex.InnerException.Message, ex.InnerException);
+				result = result ?? ctor.Invoke (null);
+			} catch (TargetInvocationException ex) {
+				if (ex.InnerException != null) {
+					throw new JsonTypeCoercionException (ex.InnerException.Message, ex.InnerException);
 				}
-				throw new JsonTypeCoercionException("Error instantiating " + objectType.FullName, ex);
+				throw new JsonTypeCoercionException ("Error instantiating " + objectType.FullName, ex);
 			}
 
 			// don't incurr the cost of member map for dictionaries
-			if (typeof(IDictionary).IsAssignableFrom(objectType))
-			{
+			if (typeof(IDictionary).IsAssignableFrom (objectType)) {
 				memberMap = null;
-			}
-			else
-			{
-				memberMap = this.CreateMemberMap(objectType);
+			} else {
+				memberMap = this.CreateMemberMap (objectType);
 			}
 			return result;
 		}
 
-		internal Dictionary<string, MemberInfo> CreateMemberMap(Type objectType)
+		internal Dictionary<string, MemberInfo> CreateMemberMap (Type objectType)
 		{
-			if (this.MemberMapCache.ContainsKey(objectType))
-			{
+			if (this.MemberMapCache.ContainsKey (objectType)) {
 				// map was stored in cache
-				return this.MemberMapCache[objectType];
+				return this.MemberMapCache [objectType];
 			}
 
 			// create a new map
-			Dictionary<string, MemberInfo> memberMap = new Dictionary<string, MemberInfo>();
+			Dictionary<string, MemberInfo> memberMap = new Dictionary<string, MemberInfo> ();
 
 			// load properties into property map
-			PropertyInfo[] properties = objectType.GetProperties();
-			foreach (PropertyInfo info in properties)
-			{
-				if (!info.CanRead || !info.CanWrite)
-				{
+			PropertyInfo[] properties = objectType.GetProperties ();
+			foreach (PropertyInfo info in properties) {
+				if (!info.CanRead || !info.CanWrite) {
 					continue;
 				}
 
-				if (JsonIgnoreAttribute.IsJsonIgnore(info))
-				{
+				if (JsonIgnoreAttribute.IsJsonIgnore (info)) {
 					continue;
 				}
 
-				string jsonName = JsonNameAttribute.GetJsonName(info);
-				if (String.IsNullOrEmpty(jsonName))
-				{
-					memberMap[info.Name] = info;
-				}
-				else
-				{
-					memberMap[jsonName] = info;
+				string jsonName = JsonNameAttribute.GetJsonName (info);
+				if (String.IsNullOrEmpty (jsonName)) {
+					memberMap [info.Name] = info;
+				} else {
+					memberMap [jsonName] = info;
 				}
 			}
 
 			// load public fields into property map
-			FieldInfo[] fields = objectType.GetFields();
-			foreach (FieldInfo info in fields)
-			{
-				if (!info.IsPublic)
-				{
+			FieldInfo[] fields = objectType.GetFields ();
+			foreach (FieldInfo info in fields) {
+				if (!info.IsPublic) {
 					continue;
 				}
 
-				if (JsonIgnoreAttribute.IsJsonIgnore(info))
-				{
+				if (JsonIgnoreAttribute.IsJsonIgnore (info)) {
 					continue;
 				}
 
-				string jsonName = JsonNameAttribute.GetJsonName(info);
-				if (String.IsNullOrEmpty(jsonName))
-				{
-					memberMap[info.Name] = info;
-				}
-				else
-				{
-					memberMap[jsonName] = info;
+				string jsonName = JsonNameAttribute.GetJsonName (info);
+				if (String.IsNullOrEmpty (jsonName)) {
+					memberMap [info.Name] = info;
+				} else {
+					memberMap [jsonName] = info;
 				}
 			}
 
 			// store in cache for repeated usage
-			this.MemberMapCache[objectType] = memberMap;
+			this.MemberMapCache [objectType] = memberMap;
 
 			return memberMap;
 		}
 
-		internal static Type GetMemberInfo(
+		internal static Type GetMemberInfo (
 			Dictionary<string, MemberInfo> memberMap,
 			string memberName,
 			out MemberInfo memberInfo)
 		{
 			if (memberMap != null &&
-				memberMap.ContainsKey(memberName))
-			{
+			    memberMap.ContainsKey (memberName)) {
 				// Check properties for object member
-				memberInfo = memberMap[memberName];
+				memberInfo = memberMap [memberName];
 
-				if (memberInfo is PropertyInfo)
-				{
+				if (memberInfo is PropertyInfo) {
 					// maps to public property
 					return ((PropertyInfo)memberInfo).PropertyType;
-				}
-				else if (memberInfo is FieldInfo)
-				{
+				} else if (memberInfo is FieldInfo) {
 					// maps to public field
 					return ((FieldInfo)memberInfo).FieldType;
 				}
@@ -279,22 +247,19 @@ namespace JsonFx.Json
 		/// <param name="memberType"></param>
 		/// <param name="memberInfo"></param>
 		/// <param name="value"></param>
-		internal void SetMemberValue(Object result, Type memberType, MemberInfo memberInfo, object value)
+		internal void SetMemberValue (Object result, Type memberType, MemberInfo memberInfo, object value)
 		{
-			if (memberInfo is PropertyInfo)
-			{
+			if (memberInfo is PropertyInfo) {
 				// set value of public property
-				((PropertyInfo)memberInfo).SetValue(
+				((PropertyInfo)memberInfo).SetValue (
 					result,
-					this.CoerceType(memberType, value),
+					this.CoerceType (memberType, value),
 					null);
-			}
-			else if (memberInfo is FieldInfo)
-			{
+			} else if (memberInfo is FieldInfo) {
 				// set value of public field
-				((FieldInfo)memberInfo).SetValue(
+				((FieldInfo)memberInfo).SetValue (
 					result,
-					this.CoerceType(memberType, value));
+					this.CoerceType (memberType, value));
 			}
 
 			// all other values are ignored
@@ -304,175 +269,149 @@ namespace JsonFx.Json
 
 		#region Type Methods
 
-		internal object CoerceType(Type targetType, object value)
+		internal object CoerceType (Type targetType, object value)
 		{
-			bool isNullable = TypeCoercionUtility.IsNullable(targetType);
-			if (value == null)
-			{
+			bool isNullable = TypeCoercionUtility.IsNullable (targetType);
+			if (value == null) {
 				if (!allowNullValueTypes &&
-					targetType.IsValueType &&
-					!isNullable)
-				{
-					throw new JsonTypeCoercionException(String.Format(TypeCoercionUtility.ErrorNullValueType, targetType.FullName));
+				    targetType.IsValueType &&
+				    !isNullable) {
+					throw new JsonTypeCoercionException (String.Format (TypeCoercionUtility.ErrorNullValueType, targetType.FullName));
 				}
 				return value;
 			}
 
-			if (isNullable)
-			{
+			if (isNullable) {
 				// nullable types have a real underlying struct
-				Type[] genericArgs = targetType.GetGenericArguments();
-				if (genericArgs.Length == 1)
-				{
-					targetType = genericArgs[0];
+				Type[] genericArgs = targetType.GetGenericArguments ();
+				if (genericArgs.Length == 1) {
+					targetType = genericArgs [0];
 				}
 			}
 
-			Type actualType = value.GetType();
-			if (targetType.IsAssignableFrom(actualType))
-			{
+			Type actualType = value.GetType ();
+			if (targetType.IsAssignableFrom (actualType)) {
 				return value;
 			}
 
-			if (targetType.IsEnum)
-			{
-				if (value is String)
-				{
-					if (!Enum.IsDefined(targetType, value))
-					{
+			if (targetType.IsEnum) {
+				if (value is String) {
+					if (!Enum.IsDefined (targetType, value)) {
 						// if isn't a defined value perhaps it is the JsonName
-						foreach (FieldInfo field in targetType.GetFields())
-						{
-							string jsonName = JsonNameAttribute.GetJsonName(field);
-							if (((string)value).Equals(jsonName))
-							{
+						foreach (FieldInfo field in targetType.GetFields()) {
+							string jsonName = JsonNameAttribute.GetJsonName (field);
+							if (((string)value).Equals (jsonName)) {
 								value = field.Name;
 								break;
 							}
 						}
 					}
 
-					return Enum.Parse(targetType, (string)value);
-				}
-				else
-				{
-					value = this.CoerceType(Enum.GetUnderlyingType(targetType), value);
-					return Enum.ToObject(targetType, value);
+					return Enum.Parse (targetType, (string)value);
+				} else {
+					value = this.CoerceType (Enum.GetUnderlyingType (targetType), value);
+					return Enum.ToObject (targetType, value);
 				}
 			}
 
-			if (value is IDictionary)
-			{
+			if (value is IDictionary) {
+				if (targetType == typeof(DateTime)) {
+					// EJSON DateTime decoding attempt
+					var valueDictionary = value as IDictionary;
+					if (valueDictionary != null
+					    && valueDictionary.Contains ("$date")) {
+						var ticks = (long)valueDictionary ["$date"];
+						if (ticks != 0) {
+							var date = new DateTime (1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+							date = date.AddMilliseconds ((double)ticks);
+							return date;                    		
+						}
+					}
+				}
+
 				Dictionary<string, MemberInfo> memberMap;
-				return this.CoerceType(targetType, (IDictionary)value, out memberMap);
+				return this.CoerceType (targetType, (IDictionary)value, out memberMap);
 			}
 
-			if (typeof(IEnumerable).IsAssignableFrom(targetType) &&
-				typeof(IEnumerable).IsAssignableFrom(actualType))
-			{
-				return this.CoerceList(targetType, actualType, (IEnumerable)value);
+			if (typeof(IEnumerable).IsAssignableFrom (targetType) &&
+			    typeof(IEnumerable).IsAssignableFrom (actualType)) {
+				return this.CoerceList (targetType, actualType, (IEnumerable)value);
 			}
 
-			if (value is String)
-			{
-				if (targetType == typeof(DateTime))
-				{
+			if (value is String) {
+				if (targetType == typeof(DateTime)) {
 					DateTime date;
 
 					// If this is a crazy server date string, clean up the server junk.
-					if (((string)value).StartsWith("/Date(") && ((string)value).EndsWith(")/"))
-					{
+					if (((string)value).StartsWith ("/Date(") && ((string)value).EndsWith (")/")) {
 						date = new DateTime (1970, 1, 1, 0, 0, 0, 0);
-						value = ((string)value).Replace ("/Date(", "").Replace (")/", "").Replace("+0000","");
+						value = ((string)value).Replace ("/Date(", "").Replace (")/", "").Replace ("+0000", "");
 						date = date.AddMilliseconds (long.Parse ((string)value));
 						return date;
 					}
 
 					// Try a regular DateTime parse
-					if (DateTime.TryParse(
-						(string)value,
-						DateTimeFormatInfo.InvariantInfo,
-						DateTimeStyles.RoundtripKind | DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.NoCurrentDateDefault,
-						out date))
-					{
+					if (DateTime.TryParse (
+						    (string)value,
+						    DateTimeFormatInfo.InvariantInfo,
+						    DateTimeStyles.RoundtripKind | DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.NoCurrentDateDefault,
+						    out date)) {
 						return date;
 					}
-				}
-				else if (targetType == typeof(Guid))
-				{
+				} else if (targetType == typeof(Guid)) {
 					// try-catch is pointless since will throw upon generic conversion
-					return new Guid((string)value);
-				}
-				else if (targetType == typeof(Char))
-				{
-					if (((string)value).Length == 1)
-					{
-						return ((string)value)[0];
+					return new Guid ((string)value);
+				} else if (targetType == typeof(Char)) {
+					if (((string)value).Length == 1) {
+						return ((string)value) [0];
 					}
-				}
-				else if (targetType == typeof(Uri))
-				{
+				} else if (targetType == typeof(Uri)) {
 					Uri uri;
-					if (Uri.TryCreate((string)value, UriKind.RelativeOrAbsolute, out uri))
-					{
+					if (Uri.TryCreate ((string)value, UriKind.RelativeOrAbsolute, out uri)) {
 						return uri;
 					}
-				}
-				else if (targetType == typeof(Version))
-				{
+				} else if (targetType == typeof(Version)) {
 					// try-catch is pointless since will throw upon generic conversion
-					return new Version((string)value);
+					return new Version ((string)value);
 				}
-			}
-			else if (targetType == typeof(TimeSpan))
-			{
-				return new TimeSpan((long)this.CoerceType(typeof(Int64), value));
+			} else if (targetType == typeof(TimeSpan)) {
+				return new TimeSpan ((long)this.CoerceType (typeof(Int64), value));
 			}
 
-			TypeConverter converter = TypeDescriptor.GetConverter(targetType);
-			if (converter.CanConvertFrom(actualType))
-			{
-				return converter.ConvertFrom(value);
+			TypeConverter converter = TypeDescriptor.GetConverter (targetType);
+			if (converter.CanConvertFrom (actualType)) {
+				return converter.ConvertFrom (value);
 			}
 
-			converter = TypeDescriptor.GetConverter(actualType);
-			if (converter.CanConvertTo(targetType))
-			{
-				return converter.ConvertTo(value, targetType);
+			converter = TypeDescriptor.GetConverter (actualType);
+			if (converter.CanConvertTo (targetType)) {
+				return converter.ConvertTo (value, targetType);
 			}
 
-			try
-			{
+			try {
 				// fall back to basics
-				return Convert.ChangeType(value, targetType);
-			}
-			catch (Exception ex)
-			{
-				throw new JsonTypeCoercionException(
-					String.Format("Error converting {0} to {1}", value.GetType().FullName, targetType.FullName), ex);
+				return Convert.ChangeType (value, targetType);
+			} catch (Exception ex) {
+				throw new JsonTypeCoercionException (
+					String.Format ("Error converting {0} to {1}", value.GetType ().FullName, targetType.FullName), ex);
 			}
 		}
 
-		internal object CoerceType(Type targetType, IDictionary newValues, object existingObject, out Dictionary<string, MemberInfo> memberMap)
+		internal object CoerceType (Type targetType, IDictionary newValues, object existingObject, out Dictionary<string, MemberInfo> memberMap)
 		{
 			// don't incurr the cost of member map for dictionaries
-			if (typeof(IDictionary).IsAssignableFrom(targetType) && existingObject is IDictionary)
-			{
+			if (typeof(IDictionary).IsAssignableFrom (targetType) && existingObject is IDictionary) {
 				memberMap = null;
-			}
-			else
-			{
-				memberMap = this.CreateMemberMap(targetType);
+			} else {
+				memberMap = this.CreateMemberMap (targetType);
 			}
 
-			if (memberMap != null)
-			{
+			if (memberMap != null) {
 				// copy any values into new object
-				foreach (object key in newValues.Keys)
-				{
+				foreach (object key in newValues.Keys) {
 					MemberInfo memberInfo;
-					Type memberType = TypeCoercionUtility.GetMemberInfo(memberMap, key as String, out memberInfo);
-					this.SetMemberValue(existingObject, memberType, memberInfo, newValues[key]);
+					Type memberType = TypeCoercionUtility.GetMemberInfo (memberMap, key as String, out memberInfo);
+					this.SetMemberValue (existingObject, memberType, memberInfo, newValues [key]);
 				}
 			} else {
 				// set the values
@@ -482,35 +421,31 @@ namespace JsonFx.Json
 					return existingObject;
 				}
 
-				foreach (object key in newValues.Keys)
-				{
-					newValueDictionary[key as string] = newValues[key];
+				foreach (object key in newValues.Keys) {
+					newValueDictionary [key as string] = newValues [key];
 				}
 			}
 			return existingObject;
 		}
 
-		private object CoerceType(Type targetType, IDictionary value, out Dictionary<string, MemberInfo> memberMap)
+		private object CoerceType (Type targetType, IDictionary value, out Dictionary<string, MemberInfo> memberMap)
 		{
-			object newValue = this.InstantiateObject(targetType, out memberMap);
-			if (memberMap != null)
-			{
+			object newValue = this.InstantiateObject (targetType, out memberMap);
+			if (memberMap != null) {
 				// copy any values into new object
-				foreach (object key in value.Keys)
-				{
+				foreach (object key in value.Keys) {
 					MemberInfo memberInfo;
-					Type memberType = TypeCoercionUtility.GetMemberInfo(memberMap, key as String, out memberInfo);
-					this.SetMemberValue(newValue, memberType, memberInfo, value[key]);
+					Type memberType = TypeCoercionUtility.GetMemberInfo (memberMap, key as String, out memberInfo);
+					this.SetMemberValue (newValue, memberType, memberInfo, value [key]);
 				}
 			}
 			return newValue;
 		}
 
-		private object CoerceList(Type targetType, Type arrayType, IEnumerable value)
+		private object CoerceList (Type targetType, Type arrayType, IEnumerable value)
 		{
-			if (targetType.IsArray)
-			{
-				return this.CoerceArray(targetType.GetElementType(), value);
+			if (targetType.IsArray) {
+				return this.CoerceArray (targetType.GetElementType (), value);
 			}
 
 			// targetType serializes as a JSON array but is not an array
@@ -520,121 +455,97 @@ namespace JsonFx.Json
 			// many ICollection types take an IEnumerable or ICollection
 			// as a constructor argument.  look through constructors for
 			// a compatible match.
-			ConstructorInfo[] ctors = targetType.GetConstructors();
+			ConstructorInfo[] ctors = targetType.GetConstructors ();
 			ConstructorInfo defaultCtor = null;
-			foreach (ConstructorInfo ctor in ctors)
-			{
-				ParameterInfo[] paramList = ctor.GetParameters();
-				if (paramList.Length == 0)
-				{
+			foreach (ConstructorInfo ctor in ctors) {
+				ParameterInfo[] paramList = ctor.GetParameters ();
+				if (paramList.Length == 0) {
 					// save for in case cannot find closer match
 					defaultCtor = ctor;
 					continue;
 				}
 
 				if (paramList.Length == 1 &&
-					paramList[0].ParameterType.IsAssignableFrom(arrayType))
-				{
-					try
-					{
+				    paramList [0].ParameterType.IsAssignableFrom (arrayType)) {
+					try {
 						// invoke first constructor that can take this value as an argument
-						return ctor.Invoke(
-								new object[] { value }
-							);
-					}
-					catch
-					{
+						return ctor.Invoke (
+							new object[] { value }
+						);
+					} catch {
 						// there might exist a better match
 						continue;
 					}
 				}
 			}
 
-			if (defaultCtor == null)
-			{
-				throw new JsonTypeCoercionException(
-					String.Format(TypeCoercionUtility.ErrorDefaultCtor, targetType.FullName));
+			if (defaultCtor == null) {
+				throw new JsonTypeCoercionException (
+					String.Format (TypeCoercionUtility.ErrorDefaultCtor, targetType.FullName));
 			}
 			object collection;
-			try
-			{
+			try {
 				// always try-catch Invoke() to expose real exception
-				collection = defaultCtor.Invoke(null);
-			}
-			catch (TargetInvocationException ex)
-			{
-				if (ex.InnerException != null)
-				{
-					throw new JsonTypeCoercionException(ex.InnerException.Message, ex.InnerException);
+				collection = defaultCtor.Invoke (null);
+			} catch (TargetInvocationException ex) {
+				if (ex.InnerException != null) {
+					throw new JsonTypeCoercionException (ex.InnerException.Message, ex.InnerException);
 				}
-				throw new JsonTypeCoercionException("Error instantiating " + targetType.FullName, ex);
+				throw new JsonTypeCoercionException ("Error instantiating " + targetType.FullName, ex);
 			}
 
 			// many ICollection types have an AddRange method
 			// which adds all items at once
-			MethodInfo method = targetType.GetMethod("AddRange");
+			MethodInfo method = targetType.GetMethod ("AddRange");
 			ParameterInfo[] parameters = (method == null) ?
-					null : method.GetParameters();
+					null : method.GetParameters ();
 			Type paramType = (parameters == null || parameters.Length != 1) ?
-					null : parameters[0].ParameterType;
+					null : parameters [0].ParameterType;
 			if (paramType != null &&
-				paramType.IsAssignableFrom(arrayType))
-			{
-				try
-				{
+			    paramType.IsAssignableFrom (arrayType)) {
+				try {
 					// always try-catch Invoke() to expose real exception
 					// add all members in one method
-					method.Invoke(
+					method.Invoke (
 						collection,
 						new object[] { value });
-				}
-				catch (TargetInvocationException ex)
-				{
-					if (ex.InnerException != null)
-					{
-						throw new JsonTypeCoercionException(ex.InnerException.Message, ex.InnerException);
+				} catch (TargetInvocationException ex) {
+					if (ex.InnerException != null) {
+						throw new JsonTypeCoercionException (ex.InnerException.Message, ex.InnerException);
 					}
-					throw new JsonTypeCoercionException("Error calling AddRange on " + targetType.FullName, ex);
+					throw new JsonTypeCoercionException ("Error calling AddRange on " + targetType.FullName, ex);
 				}
 				return collection;
-			}
-			else
-			{
+			} else {
 				// many ICollection types have an Add method
 				// which adds items one at a time
-				method = targetType.GetMethod("Add");
+				method = targetType.GetMethod ("Add");
 				parameters = (method == null) ?
-						null : method.GetParameters();
+						null : method.GetParameters ();
 				paramType = (parameters == null || parameters.Length != 1) ?
-						null : parameters[0].ParameterType;
-				if (paramType != null)
-				{
-					var enumerator = TypeCoercionUtility.GetEnumerator(value);
+						null : parameters [0].ParameterType;
+				if (paramType != null) {
+					var enumerator = TypeCoercionUtility.GetEnumerator (value);
 
 					if (enumerator == null) {
-						throw new JsonTypeCoercionException(string.Format("Requested to get an IEnumerator of a value that doesn't implement the IEnumerable interface.\nValue: {0}\nValue's type: {1}",value,value.GetType().FullName));
+						throw new JsonTypeCoercionException (string.Format ("Requested to get an IEnumerator of a value that doesn't implement the IEnumerable interface.\nValue: {0}\nValue's type: {1}", value, value.GetType ().FullName));
 					}
 
-					while (enumerator.MoveNext())
-					{
+					while (enumerator.MoveNext ()) {
 						// loop through adding items to collection
 						object item = enumerator.Current;
-						try
-						{
+						try {
 							// always try-catch Invoke() to expose real exception
-							method.Invoke(
+							method.Invoke (
 								collection,
 								new object[] {
-								this.CoerceType(paramType, item)
-							});
-						}
-						catch (TargetInvocationException ex)
-						{
-							if (ex.InnerException != null)
-							{
-								throw new JsonTypeCoercionException(ex.InnerException.Message, ex.InnerException);
+									this.CoerceType (paramType, item)
+								});
+						} catch (TargetInvocationException ex) {
+							if (ex.InnerException != null) {
+								throw new JsonTypeCoercionException (ex.InnerException.Message, ex.InnerException);
 							}
-							throw new JsonTypeCoercionException("Error calling Add on " + targetType.FullName, ex);
+							throw new JsonTypeCoercionException ("Error calling Add on " + targetType.FullName, ex);
 						}
 					}
 
@@ -647,32 +558,28 @@ namespace JsonFx.Json
 				}
 			}
 
-			try
-			{
+			try {
 				// fall back to basics
-				return Convert.ChangeType(value, targetType);
-			}
-			catch (Exception ex)
-			{
-				throw new JsonTypeCoercionException(String.Format("Error converting {0} to {1}", value.GetType().FullName, targetType.FullName), ex);
+				return Convert.ChangeType (value, targetType);
+			} catch (Exception ex) {
+				throw new JsonTypeCoercionException (String.Format ("Error converting {0} to {1}", value.GetType ().FullName, targetType.FullName), ex);
 			}
 		}
 
-		private Array CoerceArray(Type elementType, IEnumerable value)
+		private Array CoerceArray (Type elementType, IEnumerable value)
 		{
-			ArrayList target = new ArrayList();
+			ArrayList target = new ArrayList ();
 
 
-			var enumerator = TypeCoercionUtility.GetEnumerator(value);
+			var enumerator = TypeCoercionUtility.GetEnumerator (value);
 
 			if (enumerator == null) {
-				throw new JsonTypeCoercionException(string.Format("Requested to get an IEnumerator of a value that doesn't implement the IEnumerable interface.\nValue: {0}\nValue's type: {1}",value,value.GetType().FullName));
+				throw new JsonTypeCoercionException (string.Format ("Requested to get an IEnumerator of a value that doesn't implement the IEnumerable interface.\nValue: {0}\nValue's type: {1}", value, value.GetType ().FullName));
 			}
 
-			while (enumerator.MoveNext())
-			{
+			while (enumerator.MoveNext ()) {
 				object item = enumerator.Current;
-				target.Add(this.CoerceType(elementType, item));
+				target.Add (this.CoerceType (elementType, item));
 			}
 
 			IDisposable disposable = enumerator as IDisposable;
@@ -680,12 +587,12 @@ namespace JsonFx.Json
 				disposable.Dispose ();
 			}
 
-			return target.ToArray(elementType);
+			return target.ToArray (elementType);
 		}
 
-		internal static bool IsNullable(Type type)
+		internal static bool IsNullable (Type type)
 		{
-			return type.IsGenericType && (typeof(Nullable<>) == type.GetGenericTypeDefinition());
+			return type.IsGenericType && (typeof(Nullable<>) == type.GetGenericTypeDefinition ());
 		}
 
 		#endregion Type Methods
@@ -695,7 +602,7 @@ namespace JsonFx.Json
 		/// </summary>
 		/// <returns>The object's IEnumerator, or null if the enumerable does not implement IEnumerable.</returns>
 		/// <param name="enumerable">Enumerable. It must be disposed by the caller.</param>
-		internal static IEnumerator GetEnumerator(object enumerable)
+		internal static IEnumerator GetEnumerator (object enumerable)
 		{
 			var interfaces = enumerable.GetType ().GetInterfaces ();
 
@@ -722,7 +629,7 @@ namespace JsonFx.Json
 			try {
 				enumerator = (IEnumerator)method.Invoke (enumerable, null);
 				return enumerator;
-			#pragma warning disable 0168
+				#pragma warning disable 0168
 			} catch (Exception e) {
 				// TODO: Define what to do in the case of an exception here.
 				return null;
