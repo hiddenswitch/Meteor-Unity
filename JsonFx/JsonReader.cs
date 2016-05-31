@@ -374,6 +374,14 @@ namespace JsonFx.Json
 				return returnDate;
 			}
 
+			// If this is a byte[] destination and we're reading an object, we're handling an EJSON UInt8 array
+			if (objectType != null
+				&& objectType == typeof(byte[])) {
+				var ejsonBinaryResult = this.ReadObject(typeof(Meteor.EJSON.EJSONUInt8Array)) as Meteor.EJSON.EJSONUInt8Array;
+				var returnBytes = System.Convert.FromBase64String(ejsonBinaryResult.binary);
+				return returnBytes;
+			}
+
 			Type genericDictionaryType = null;
 			Dictionary<string, MemberInfo> memberMap = null;
 			Object result;
