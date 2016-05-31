@@ -365,9 +365,19 @@ namespace JsonFx.Json
 				throw new JsonDeserializationException(JsonReader.ErrorExpectedObject, this.index);
 			}
 
+			// If this is a Date, then we should be reading an EJSON Date
+			if (objectType != null
+				&& objectType == typeof(DateTime)) {
+				// Read an EJSON result instead
+				var ejsonDateResult = this.ReadObject(typeof(Meteor.EJSON.EJSONDate)) as Meteor.EJSON.EJSONDate;
+				var returnDate = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddTicks(ejsonDateResult.date * 10000L);
+				return returnDate;
+			}
+
 			Type genericDictionaryType = null;
 			Dictionary<string, MemberInfo> memberMap = null;
 			Object result;
+
 			if (objectType != null)
 			{
 				result = this.Settings.Coercion.InstantiateObject(objectType, out memberMap);
@@ -771,6 +781,13 @@ namespace JsonFx.Json
 			int start = this.index;
 			int precision = 0;
 			int exponent = 0;
+
+			// If this is a timespan do the microtime conversion
+			if (expectedType != null
+				&& expectedType == typeof(TimeSpan)) {
+				object number = this.ReadNumber(typeof(long));
+				return new TimeSpan((long)((long)((int)number) * 10000L));
+			}
 
 			// optional minus part
 			if (this.Source[this.index] == JsonReader.OperatorNegate)
