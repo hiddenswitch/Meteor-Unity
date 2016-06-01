@@ -3,7 +3,7 @@ Meteor-Unity
 
 **Download Version 3.0:** http://hiddenswitch.github.io/Meteor-Unity/Meteor-Unity_v3.0.unitypackage.
 
-A Unity SDK for Meteor. Supports Unity3D 5.3.2 and higher. See the [Documentation](http://hiddenswitch.github.io/Meteor-Unity/annotated.html).
+A Unity SDK for Meteor. Tested with Unity3D 5.3.2f2, Meteor's Galaxy hosting and Modulus hosting on iOS 9.2 and 9.3 64bit platforms. See the [Documentation](http://hiddenswitch.github.io/Meteor-Unity/annotated.html).
 
 This release supports `il2cpp` backends, allowing it to be used in production for iOS builds. iOS, Android and desktop platforms are supported. WebGL is not supported.
 
@@ -12,6 +12,15 @@ See the example code at the bottom of the Readme for an overview of all the supp
  - In Meteor, disconnecting and reconnecting triggers a removal of all records and adding of all new records, as though a subscription was torn down and recreated. In Meteor-Unity, disconnecting does not result in removing records, while reconnecting will result in add messages / added called in observe handles.
 
 Compared to Meteor, Meteor-Unity has some limitations. It cannot simulate code yet, so database side effects must come from the server. It cannot handle documents that aren't explicitly typed.
+
+##### Tips
+
+ - Your websocket URL will be in the form of `ws://domain.com/websocket` without SSL, `wss://domain.com/websocket` with SSL, and `ws://localhost:3000/websocket` locally.
+ - If you're hosting on Galaxy, make sure to enable an SSL certificate when you add the domain to your Galaxy application. Otherwise, you will not be able to connect to your websocket server at all, regardless of the URL you use.
+ - Over cellular Internet, many providers degrade non-SSL traffic. Use an SSL certificate to improve your Websocket connectivity over 3G and LTE.
+ - Deserializing large amounts of JSON takes time. This occurs whenever you receive data from Meteor. If you need to transfer large amounts of data frequently to a Unity client, use a `sealed class`and use 1-letter field names for your documents. In the future, `struct` and Unity's built-in JSON will be supported to greatly improve performance.
+ - Keep your data structures simple: use arrays instead of generic lists and value types like `Vector3` instead of classes. This will help you get performance improvements in future releases, since most optimizations will only support simpler structures.
+ - Meteor cannot outperform UNET in latency, especially when responding to method calls from client to server. However, Meteor publishes are nearly as efficient as they can be. Consider whether for your purposes you need to write to databases, or whether or not you can use the `(publish handle).added`, `removed` and `changed` calls in your `Meteor.publish` function directly.
 
 ##### Getting Started
 
