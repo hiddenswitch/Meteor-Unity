@@ -40,6 +40,8 @@
  */
 #endregion
 
+#pragma warning disable 0618
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -1457,3 +1459,5 @@ namespace WebSocketSharp.Net
     #endregion
   }
 }
+
+#pragma warning restore 0618
