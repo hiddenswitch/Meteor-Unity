@@ -3,7 +3,7 @@ Meteor-Unity
 
 **Download Version 3.1:** http://hiddenswitch.github.io/Meteor-Unity/Meteor-Unity_v3.1.unitypackage.
 
-A Unity SDK for Meteor. Tested with Unity3D 5.3.2f2, Meteor's Galaxy hosting and Modulus hosting on iOS 9.2 and 9.3 64bit platforms. See the [Documentation](http://hiddenswitch.github.io/Meteor-Unity/annotated.html).
+A Unity SDK for Meteor. Tested with Unity3D 5.3.2p2, Meteor's Galaxy hosting and Modulus hosting on iOS 9.2 and 9.3 64bit platforms. See the [Documentation](http://hiddenswitch.github.io/Meteor-Unity/annotated.html).
 
 This release supports `il2cpp` backends, allowing it to be used in production for iOS builds. iOS, Android and desktop platforms are supported. WebGL is not supported.
 
