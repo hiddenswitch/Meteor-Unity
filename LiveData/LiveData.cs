@@ -114,11 +114,11 @@ namespace Meteor.Internal
 				Connector.OnError -= HandleOnError;
 			}
 			Connector = new WebSocket (new Uri (url));
+			yield return Connector.Connect ();
 			connectorInstanceId = Connector.GetHashCode ();
 			Connector.OnClosed += HandleOnClosed;
 			Connector.OnError += HandleOnError;
 			CoroutineHost.Instance.StartCoroutine (Dispatcher ());
-			yield return Connector.Connect ();
 			SendConnectMessage ();
 
 			while (!Connected) {
