@@ -14,7 +14,7 @@
  * Copyright (c) 2003 Ben Maurer
  * Copyright (c) 2003, 2005, 2009 Novell, Inc. (http://www.novell.com)
  * Copyright (c) 2009 Stephane Delcroix
- * Copyright (c) 2010-2015 sta.blockhead
+ * Copyright (c) 2010-2016 sta.blockhead
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -67,6 +67,7 @@ namespace WebSocketSharp
     #region Private Fields
 
     private static readonly byte[] _last = new byte[] { 0x00 };
+    private static readonly int    _retry = 5;
     private const string           _tspecials = "()<>@,;:\\\"/[]?={} \t";
 
     #endregion
@@ -212,6 +213,18 @@ namespace WebSocketSharp
     internal static string CheckIfValidWaitTime (this TimeSpan time)
     {
       return time <= TimeSpan.Zero ? "A wait time is zero or less." : null;
+    }
+
+    internal static bool CheckWaitTime (this TimeSpan time, out string message)
+    {
+      message = null;
+
+      if (time <= TimeSpan.Zero) {
+        message = "A wait time is zero or less.";
+        return false;
+      }
+
+      return true;
     }
 
     internal static void Close (this HttpListenerResponse response, HttpStatusCode code)
@@ -637,32 +650,44 @@ namespace WebSocketSharp
     }
 
     internal static void ReadBytesAsync (
-      this Stream stream, int length, Action<byte[]> completed, Action<Exception> error)
+      this Stream stream, int length, Action<byte[]> completed, Action<Exception> error
+    )
     {
       var buff = new byte[length];
       var offset = 0;
+      var retry = 0;
 
       AsyncCallback callback = null;
-      callback = ar => {
-        try {
-          var nread = stream.EndRead (ar);
-          if (nread == 0 || nread == length) {
-            if (completed != null)
-              completed (buff.SubArray (0, offset + nread));
+      callback =
+        ar => {
+          try {
+            var nread = stream.EndRead (ar);
+            if (nread == 0 && retry < _retry) {
+              retry++;
+              stream.BeginRead (buff, offset, length, callback, null);
 
-            return;
+              return;
+            }
+
+            if (nread == 0 || nread == length) {
+              if (completed != null)
+                completed (buff.SubArray (0, offset + nread));
+
+              return;
+            }
+
+            retry = 0;
+
+            offset += nread;
+            length -= nread;
+
+            stream.BeginRead (buff, offset, length, callback, null);
           }
-
-          offset += nread;
-          length -= nread;
-
-          stream.BeginRead (buff, offset, length, callback, null);
-        }
-        catch (Exception ex) {
-          if (error != null)
-            error (ex);
-        }
-      };
+          catch (Exception ex) {
+            if (error != null)
+              error (ex);
+          }
+        };
 
       try {
         stream.BeginRead (buff, offset, length, callback, null);
@@ -678,46 +703,58 @@ namespace WebSocketSharp
       long length,
       int bufferLength,
       Action<byte[]> completed,
-      Action<Exception> error)
+      Action<Exception> error
+    )
     {
       var dest = new MemoryStream ();
       var buff = new byte[bufferLength];
+      var retry = 0;
 
       Action<long> read = null;
-      read = len => {
-        if (len < bufferLength)
-          bufferLength = (int) len;
+      read =
+        len => {
+          if (len < bufferLength)
+            bufferLength = (int) len;
 
-        stream.BeginRead (
-          buff,
-          0,
-          bufferLength,
-          ar => {
-            try {
-              var nread = stream.EndRead (ar);
-              if (nread > 0)
-                dest.Write (buff, 0, nread);
+          stream.BeginRead (
+            buff,
+            0,
+            bufferLength,
+            ar => {
+              try {
+                var nread = stream.EndRead (ar);
+                if (nread > 0)
+                  dest.Write (buff, 0, nread);
 
-              if (nread == 0 || nread == len) {
-                if (completed != null) {
-                  dest.Close ();
-                  completed (dest.ToArray ());
+                if (nread == 0 && retry < _retry) {
+                  retry++;
+                  read (len);
+
+                  return;
                 }
 
-                dest.Dispose ();
-                return;
-              }
+                if (nread == 0 || nread == len) {
+                  if (completed != null) {
+                    dest.Close ();
+                    completed (dest.ToArray ());
+                  }
 
-              read (len - nread);
-            }
-            catch (Exception ex) {
-              dest.Dispose ();
-              if (error != null)
-                error (ex);
-            }
-          },
-          null);
-      };
+                  dest.Dispose ();
+                  return;
+                }
+
+                retry = 0;
+                read (len - nread);
+              }
+              catch (Exception ex) {
+                dest.Dispose ();
+                if (error != null)
+                  error (ex);
+              }
+            },
+            null
+          );
+        };
 
       try {
         read (length);
@@ -829,6 +866,10 @@ namespace WebSocketSharp
 
     internal static System.Net.IPAddress ToIPAddress (this string hostnameOrAddress)
     {
+      System.Net.IPAddress addr;
+      if (System.Net.IPAddress.TryParse (hostnameOrAddress, out addr))
+        return addr;
+
       try {
         return System.Net.Dns.GetHostAddresses (hostnameOrAddress)[0];
       }
@@ -920,6 +961,50 @@ namespace WebSocketSharp
                      uri.PathAndQuery));
 
       message = String.Empty;
+      return true;
+    }
+
+    internal static bool TryGetUTF8DecodedString (this byte[] bytes, out string s)
+    {
+      s = null;
+
+      try {
+        s = Encoding.UTF8.GetString (bytes);
+      }
+      catch {
+        return false;
+      }
+
+      return true;
+    }
+
+    internal static bool TryGetUTF8EncodedBytes (this string s, out byte[] bytes)
+    {
+      bytes = null;
+
+      try {
+        bytes = Encoding.UTF8.GetBytes (s);
+      }
+      catch {
+        return false;
+      }
+
+      return true;
+    }
+
+    internal static bool TryOpenRead (
+      this FileInfo fileInfo, out FileStream fileStream
+    )
+    {
+      fileStream = null;
+
+      try {
+        fileStream = fileInfo.OpenRead ();
+      }
+      catch {
+        return false;
+      }
+
       return true;
     }
 
@@ -1271,10 +1356,13 @@ namespace WebSocketSharp
 
     /// <summary>
     /// Determines whether the specified <see cref="System.Net.IPAddress"/> represents
-    /// the local IP address.
+    /// a local IP address.
     /// </summary>
+    /// <remarks>
+    /// This local means NOT REMOTE for the current host.
+    /// </remarks>
     /// <returns>
-    /// <c>true</c> if <paramref name="address"/> represents the local IP address;
+    /// <c>true</c> if <paramref name="address"/> represents a local IP address;
     /// otherwise, <c>false</c>.
     /// </returns>
     /// <param name="address">
@@ -1285,14 +1373,26 @@ namespace WebSocketSharp
       if (address == null)
         return false;
 
-      if (address.Equals (System.Net.IPAddress.Any) || System.Net.IPAddress.IsLoopback (address))
+      if (address.Equals (System.Net.IPAddress.Any))
         return true;
+
+      if (address.Equals (System.Net.IPAddress.Loopback))
+        return true;
+
+      if (Socket.OSSupportsIPv6) {
+        if (address.Equals (System.Net.IPAddress.IPv6Any))
+          return true;
+
+        if (address.Equals (System.Net.IPAddress.IPv6Loopback))
+          return true;
+      }
 
       var host = System.Net.Dns.GetHostName ();
       var addrs = System.Net.Dns.GetHostAddresses (host);
-      foreach (var addr in addrs)
+      foreach (var addr in addrs) {
         if (address.Equals (addr))
           return true;
+      }
 
       return false;
     }
