@@ -4,9 +4,26 @@ using System.Reflection;
 using System.Collections;
 using System.Text;
 using JsonFx.Json;
+using System.Linq;
 
 namespace Meteor.Extensions
 {
+
+	public static partial class DictExtensions
+	{
+		public static string DebugDict(this IDictionary dictionary)
+		{
+			var str = new StringBuilder();
+			str.Append("{");
+			foreach (var pair in dictionary.Cast<DictionaryEntry>())
+			{
+				str.Append(String.Format(" {0}={1} ", pair.Key, pair.Value));
+			}
+			str.Append("}");
+			return str.ToString();
+		}
+	}
+
 	public static partial class ObjectExtensions
 	{
 		static void DateSerializer (JsonFx.Json.JsonWriter writer, DateTime value)
