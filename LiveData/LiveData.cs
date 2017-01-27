@@ -409,6 +409,12 @@ namespace Meteor.Internal
 			case ResultMessage.result:
 				ResultMessage resultm = null;
 				resultm = socketMessage.Deserialize<ResultMessage> ();
+				if (resultm.methodError != null) {
+					int code = (int)resultm.methodError["error"];
+					string reason = (string)resultm.methodError["reason"];
+					string type = (string)resultm.methodError["errorType"];
+					throw new MeteorException (code, reason);
+				}
 				if (methods.ContainsKey (resultm.id)) {
 					methods [resultm.id].Callback (resultm.error, resultm.methodResult);
 				} else {
@@ -433,6 +439,17 @@ namespace Meteor.Internal
 				Send (pongMessage);
 				break;
 			case PongMessage.pong:
+				break;
+			case NosubMessage.nosub:
+				NosubMessage nosubm = null;
+				nosubm = socketMessage.Deserialize<NosubMessage> ();
+				if (nosubm.Error != null) {
+					string id = nosubm.id;
+					int code = (int)nosubm.Error["error"];
+					string reason = (string)nosubm.Error["reason"];
+					string type = (string)nosubm.Error["errorType"];
+					throw new MeteorException (code, reason);
+				}
 				break;
 			default:
 				if (!socketMessage.Contains ("server_id")) {
