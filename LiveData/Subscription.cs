@@ -69,6 +69,14 @@ namespace Meteor
 			return LiveData.Instance.Subscribe (name, args);
 		}
 
+		public static void Unsubscribe(Subscription sub) {
+			LiveData.Instance.Unsubscribe (sub.requestId);
+		}
+
+		public static void Unsubscribe(string subId) {
+			LiveData.Instance.Unsubscribe (subId);
+		}
+
 		public Subscription ()
 		{
 		}

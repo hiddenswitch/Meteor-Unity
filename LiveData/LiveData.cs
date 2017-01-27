@@ -297,6 +297,13 @@ namespace Meteor.Internal
 			return Subscriptions [requestId];
 		}
 
+		public void Unsubscribe (string subId)
+		{
+			Send (new UnsubscribeMessage () {
+				id = subId
+			});
+		}
+
 		#endregion
 
 		private int NextId ()

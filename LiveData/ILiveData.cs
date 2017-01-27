@@ -12,6 +12,7 @@ namespace Meteor.Internal
 		Method Call (string methodName, params object[] arguments);
 		Method<TResponseType> Call<TResponseType> (string methodName, params object[] arguments);
 		Subscription Subscribe (string publishName, params object[] arguments);
-        int GetCurrentRequestId();
+		void Unsubscribe (string subId);
+		int GetCurrentRequestId();
     }
 }
