@@ -58,6 +58,21 @@ namespace Meteor.Internal
 			methods = new Dictionary<string, IMethod> ();
 
 			uniqueId = 1;
+
+			CoroutineHost.Instance.StartCoroutine (HeartbeatCoroutine ());
+		}
+
+		public IEnumerator HeartbeatCoroutine()
+		{
+			while (true) {
+				yield return new WaitForSeconds(10);
+				if (Connected) {
+					var message = (new PingMessage () {
+						id = string.Format ("ping-{0}", this.NextId ())
+					}).Serialize ();
+					Connector.Send (System.Text.Encoding.UTF8.GetBytes (message));
+				}
+			}
 		}
 
 		/// <summary>
