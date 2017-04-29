@@ -58,6 +58,21 @@ namespace Meteor.Internal
 			methods = new Dictionary<string, IMethod> ();
 
 			uniqueId = 1;
+
+			CoroutineHost.Instance.StartCoroutine (HeartbeatCoroutine ());
+		}
+
+		public IEnumerator HeartbeatCoroutine()
+		{
+			while (true) {
+				yield return new WaitForSeconds(10);
+				if (Connected) {
+					var message = (new PingMessage () {
+						id = string.Format ("ping-{0}", this.NextId ())
+					}).Serialize ();
+					Connector.Send (System.Text.Encoding.UTF8.GetBytes (message));
+				}
+			}
 		}
 
 		/// <summary>
@@ -114,11 +129,11 @@ namespace Meteor.Internal
 				Connector.OnError -= HandleOnError;
 			}
 			Connector = new WebSocket (new Uri (url));
+			yield return Connector.Connect ();
 			connectorInstanceId = Connector.GetHashCode ();
 			Connector.OnClosed += HandleOnClosed;
 			Connector.OnError += HandleOnError;
 			CoroutineHost.Instance.StartCoroutine (Dispatcher ());
-			yield return Connector.Connect ();
 			SendConnectMessage ();
 
 			while (!Connected) {
@@ -297,6 +312,13 @@ namespace Meteor.Internal
 			return Subscriptions [requestId];
 		}
 
+		public void Unsubscribe (string subId)
+		{
+			Send (new UnsubscribeMessage () {
+				id = subId
+			});
+		}
+
 		#endregion
 
 		private int NextId ()
@@ -387,6 +409,12 @@ namespace Meteor.Internal
 			case ResultMessage.result:
 				ResultMessage resultm = null;
 				resultm = socketMessage.Deserialize<ResultMessage> ();
+				if (resultm.methodError != null) {
+					int code = (int)resultm.methodError["error"];
+					string reason = (string)resultm.methodError["reason"];
+					string type = (string)resultm.methodError["errorType"];
+					throw new MeteorException (code, reason);
+				}
 				if (methods.ContainsKey (resultm.id)) {
 					methods [resultm.id].Callback (resultm.error, resultm.methodResult);
 				} else {
@@ -411,6 +439,17 @@ namespace Meteor.Internal
 				Send (pongMessage);
 				break;
 			case PongMessage.pong:
+				break;
+			case NosubMessage.nosub:
+				NosubMessage nosubm = null;
+				nosubm = socketMessage.Deserialize<NosubMessage> ();
+				if (nosubm.Error != null) {
+					string id = nosubm.id;
+					int code = (int)nosubm.Error["error"];
+					string reason = (string)nosubm.Error["reason"];
+					string type = (string)nosubm.Error["errorType"];
+					throw new MeteorException (code, reason);
+				}
 				break;
 			default:
 				if (!socketMessage.Contains ("server_id")) {

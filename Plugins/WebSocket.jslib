@@ -28,6 +28,14 @@ SocketCreate: function(url)
 		{
 			var array = new Uint8Array(e.data);
 			socket.messages.push(array);
+		} else if(typeof e.data === "string") {
+			var reader = new FileReader();
+			reader.addEventListener("loadend", function() {
+				var array = new Uint8Array(reader.result);
+				socket.messages.push(array);
+			});
+			var blob = new Blob([e.data]);
+			reader.readAsArrayBuffer(blob);
 		}
 	};
 
@@ -93,7 +101,7 @@ SocketSend: function (socketInstance, ptr, length)
 SocketRecvLength: function(socketInstance)
 {
 	var socket = webSocketInstances[socketInstance];
-	if (socket.messages.length == 0)
+	if (!socket || socket.messages.length == 0)
 		return 0;
 	return socket.messages[0].length;
 },

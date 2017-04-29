@@ -17,6 +17,9 @@ namespace Meteor.Internal
 		[JsonFx.Json.JsonName("result")]
 		public object methodResult;
 
+		[JsonFx.Json.JsonName("error")]
+		public Hashtable methodError;
+
 		public ResultMessage ()
 		{
 			msg = result;
