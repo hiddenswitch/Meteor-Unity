@@ -27,73 +27,69 @@ Compared to Meteor, Meteor-Unity has some limitations. It cannot simulate code y
   0. Check out the documentation at http://hiddenswitch.github.io/Meteor-Unity/annotated.html.
 
   1. Install `meteor`.
- 
-    ```sh
-    # Install meteor
-    curl https://install.meteor.com/ | sh
-    ```
+     ```sh
+     # Install meteor
+     curl https://install.meteor.com/ | sh
+     ```
 
   2. Create a new Unity project.
-    
-    ```sh
-    # For Mac
-    /Applications/Unity/Unity.app/Contents/MacOS/Unity -createProject ~/Documents/Example
-    cd ~/Documents/Example
-    ```
+     ```sh
+     # For Mac
+     /Applications/Unity/Unity.app/Contents/MacOS/Unity -createProject ~/Documents/Example
+     cd ~/Documents/Example
+     ```
 
   4. Download and install the [Meteor-Unity package](http://hiddenswitch.github.io/Meteor-Unity/Meteor-Unity_v3.0.unitypackage).
   
 
   5. Create a `meteor` project, add the `accounts-password` package, and run the project.
-  
-    ```sh
-    meteor create Web
-    cd Web
-    meteor add accounts-password
-    meteor
-    ```
+     ```sh
+     meteor create Web
+     cd Web
+     meteor add accounts-password
+     meteor
+     ```
   
   6. Connect to your server from Unity. All `meteor` work should live in coroutines. Here is an example which uses a coroutine (`IEnumerator`) to sequence a bunch of actions one after another. In this example, we assume we've defined a collection called `collectionName` on the server and created a few methods and subscriptions. You can't copy and paste the code below and expect it to work with an empty `meteor` project, but it will compile.
-  
-    ```c#
-    IEnumerator MeteorExample() {
-      var production = false;
+     ```c#
+     IEnumerator MeteorExample() {
+       var production = false;
 
-  		// Connect to the meteor server. Yields when you're connected
-  		if (production) {
-  		  yield return Meteor.Connection.Connect ("wss://productionserver.com/websocket");
-  		} else {
-  		  yield return Meteor.Connection.Connect ("ws://localhost:3000/websocket");
-  		}
-  
-  		// Login
-  		yield return (Coroutine)Meteor.Accounts.LoginAsGuest ();
-  
-  		// Create a collection
-  		var collection = new Meteor.Collection<DocumentType> ("collectionName");
-  
-  		// Add some handlers with the new observer syntax
-  		var observer = collection.Find ().Observe (added: (string id, DocumentType document) => {
-  			Debug.Log(string.Format("Document added: [_id={0}]", document._id));
-  		});
-  
-  		// Subscribe
-  		var subscription = Meteor.Subscription.Subscribe ("subscriptionEndpointName", /*arguments*/ 1, 3, 4);
-  		// The convention to turn something into a connection is to cast it to a Coroutine
-  		yield return (Coroutine)subscription;
-  
-  		// Create a method call that returns a string
-  		var methodCall = Meteor.Method<string>.Call ("getStringMethod", /*arguments*/1, 3, 4);
-  
-  		// Execute the method. This will yield until all the database side effects have synced.
-  		yield return (Coroutine)methodCall;
-  
-  		// Get the value returned by the method.
-  		Debug.Log (string.Format ("Method response:\n{0}", methodCall.Response));
-  	}
-  
-  	public class DocumentType : Meteor.MongoDocument {
-  		public string stringField;
-  		public int intField;
-  	}
-    ```
+     	// Connect to the meteor server. Yields when you're connected
+     	if (production) {
+     	  yield return Meteor.Connection.Connect ("wss://productionserver.com/websocket");
+     	} else {
+     	  yield return Meteor.Connection.Connect ("ws://localhost:3000/websocket");
+     	}
+     
+     	// Login
+     	yield return (Coroutine)Meteor.Accounts.LoginAsGuest ();
+     
+     	// Create a collection
+     	var collection = new Meteor.Collection<DocumentType> ("collectionName");
+     
+     	// Add some handlers with the new observer syntax
+     	var observer = collection.Find ().Observe (added: (string id, DocumentType document) => {
+     		Debug.Log(string.Format("Document added: [_id={0}]", document._id));
+     	});
+     
+     	// Subscribe
+     	var subscription = Meteor.Subscription.Subscribe ("subscriptionEndpointName", /*arguments*/ 1, 3, 4);
+     	// The convention to turn something into a connection is to cast it to a Coroutine
+     	yield return (Coroutine)subscription;
+     
+     	// Create a method call that returns a string
+     	var methodCall = Meteor.Method<string>.Call ("getStringMethod", /*arguments*/1, 3, 4);
+     
+     	// Execute the method. This will yield until all the database side effects have synced.
+     	yield return (Coroutine)methodCall;
+     
+     	// Get the value returned by the method.
+     	Debug.Log (string.Format ("Method response:\n{0}", methodCall.Response));
+     }
+     
+     public class DocumentType : Meteor.MongoDocument {
+     	public string stringField;
+     	public int intField;
+     }
+     ```
