@@ -4,7 +4,7 @@ namespace Meteor.Internal
 	{
 		const string unsub = "unsub";
 
-		string id;
+		internal string id;
 
 		public UnsubscribeMessage ()
 		{
