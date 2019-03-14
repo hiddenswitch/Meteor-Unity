@@ -1,17 +1,15 @@
 Meteor-Unity
 ============
 
-**Download Version 3.1:** http://hiddenswitch.github.io/Meteor-Unity/Meteor-Unity_v3.1.unitypackage.
+**Download Version 3.2:** http://hiddenswitch.github.io/Meteor-Unity/Meteor-Unity_v3.2.unitypackage.
 
-A Unity SDK for Meteor. Tested with Unity3D 5.3.2p2, Meteor's Galaxy hosting and Modulus hosting on iOS 9.2 and 9.3 64bit platforms. See the [Documentation](http://hiddenswitch.github.io/Meteor-Unity/annotated.html).
+A Unity SDK for Meteor. Tested with Unity3D 2018.3.2f1 on il2cpp platforms. See the [Documentation](http://hiddenswitch.github.io/Meteor-Unity/annotated.html).
 
 This release supports `il2cpp` backends, allowing it to be used in production for iOS builds. iOS, Android and desktop platforms are supported. WebGL is not supported.
 
 See the example code at the bottom of the Readme for an overview of all the supported features. Wherever possible, the API matches the Meteor API, and the details match Meteor details. There is an exception to how things usually work in Meteor:
 
- - In Meteor, disconnecting and reconnecting triggers a removal of all records and adding of all new records, as though a subscription was torn down and recreated. In Meteor-Unity, disconnecting does not result in removing records, while reconnecting will result in add messages / added called in observe handles.
-
-Compared to Meteor, Meteor-Unity has some limitations. It cannot simulate code yet, so database side effects must come from the server. It cannot handle documents that aren't explicitly typed.
+Compared to Meteor, Meteor-Unity has some limitations. It cannot simulate code yet, so database side effects must come from the server. It also cannot handle documents that are not explicitly typed.
 
 ##### Tips
 
@@ -93,3 +91,32 @@ Compared to Meteor, Meteor-Unity has some limitations. It cannot simulate code y
      	public int intField;
      }
      ```
+
+To use the above example, include the following file in the `server/` directory in your Meteor project:
+
+```js
+let collection = new Mongo.Collection('collectionName', {connection: null});
+   Meteor.publish('subscriptionEndpointName', function (number1, number2, number3) {
+   console.log(`Subscribed: ${number1}, ${number2}, ${number3}`);
+   return collection.find({});
+});
+   
+Meteor.methods({
+   'getStringMethod': function (number1, number2, number3) {
+   console.log(`Called method: ${number1}, ${number2}, ${number3}`);
+   return "test";
+   }
+});
+   
+Meteor.setInterval(function () {
+   collection.insert({
+   stringField: 'test',
+   intField: 1
+   })
+}, 1000);
+   
+Accounts.onCreateUser(function (user) {
+   console.log(`User created: ${user._id}`);
+   return user;
+});
+```
